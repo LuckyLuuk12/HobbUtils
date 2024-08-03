@@ -1,2 +1,4 @@
-package net.hobb.utils;public class ItemUtil {
+package net.hobb.utils;
+
+public class ItemUtil {
 }

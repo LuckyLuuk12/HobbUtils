@@ -9,13 +9,13 @@ import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 
-public class Config {
+public class ConfigUtil {
 
   private FileConfiguration config;
   private File configFile;
   private final String folderName, fileName;
 
-  public Config(final String folderName, final String fileName) {
+  public ConfigUtil(final String folderName, final String fileName) {
     this.folderName = folderName;
     this.fileName = fileName;
   }
