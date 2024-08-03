@@ -3,7 +3,7 @@ package net.hobb.utils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 
 public class LocationUtil {
   /**
