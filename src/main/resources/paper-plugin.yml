@@ -1,0 +1,4 @@
+name: Hobb
+version: '1.0'
+main: net.hobb.Hobb
+api-version: '1.21'
