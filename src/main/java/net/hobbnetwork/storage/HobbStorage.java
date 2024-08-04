@@ -1,7 +1,7 @@
-package net.hobb.storage;
+package net.hobbnetwork.storage;
 
 import lombok.Getter;
-import net.hobb.HobbUtils;
+import net.hobbnetwork.HobbUtils;
 
 import java.util.ArrayList;
 

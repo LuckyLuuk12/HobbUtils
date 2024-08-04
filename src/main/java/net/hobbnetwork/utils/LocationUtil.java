@@ -1,4 +1,4 @@
-package net.hobb.utils;
+package net.hobbnetwork.utils;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;

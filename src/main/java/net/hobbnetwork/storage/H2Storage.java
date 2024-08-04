@@ -1,11 +1,11 @@
-package net.hobb.storage;
+package net.hobbnetwork.storage;
 
 
-import net.hobb.HobbUtils;
+import net.hobbnetwork.HobbUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.sql.*;
-import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
@@ -52,12 +52,14 @@ public class H2Storage extends Storage {
    * @return True if the value was set, false otherwise
    */
   @Override
-  public CompletableFuture<Boolean> setValue(@NotNull TypedKeyValue<?> tkv, @NotNull Object value) {
+  public CompletableFuture<Boolean> setValue(@NotNull TypedKeyValue<?> tkv, @Nullable Object value) {
     return CompletableFuture.supplyAsync(() -> {
-      String insertSQL = "MERGE INTO `key_value` (`key`, `value`) VALUES (?, ?);";
+      String insertSQL = value == null
+        ? "DELETE FROM `key_value` WHERE `key` = ?;"
+        : "MERGE INTO `key_value` (`key`, `value`) VALUES (?, ?);";
       try (PreparedStatement pstmt = connection.prepareStatement(insertSQL)) {
         pstmt.setString(1, tkv.getKey());
-        pstmt.setObject(2, value);
+        if(value != null) pstmt.setObject(2, value);
         return pstmt.executeUpdate() != 0;
       } catch (SQLException e) {
         HobbUtils.getHookedPlugin().getLogger().log(Level.SEVERE, "Could not set value!", e);

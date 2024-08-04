@@ -1,4 +1,4 @@
-package net.hobb;
+package net.hobbnetwork;
 
 import lombok.Getter;
 import org.bukkit.Server;
@@ -6,6 +6,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public final class HobbUtils extends JavaPlugin {
@@ -37,6 +38,7 @@ public final class HobbUtils extends JavaPlugin {
    */
   public static void hook(@NotNull Plugin plugin) {
     hookedPlugin = (JavaPlugin) plugin;
+    getConsole().log(Level.INFO, plugin.getName()+" Hooked into HobbUtils!");
   }
   /**
    * This method returns whether a plugin is hooked

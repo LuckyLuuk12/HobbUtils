@@ -1,6 +1,6 @@
-package net.hobb.utils;
+package net.hobbnetwork.utils;
 
-import net.hobb.HobbUtils;
+import net.hobbnetwork.HobbUtils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -58,6 +58,14 @@ public class GUIUtils implements Listener {
       }
     }
 
+    /**
+     * This method sets the item in a specific slot
+     * @param slot The slot to set the item in
+     * @param item The item to set
+     * @param isEditable Whether the item is editable, if not provided, it will default to false.
+     *                   Meaning that a player cannot do anything with the item besides activating the callback
+     * @param callback The callback to call when the item is clicked
+     */
     public void setItem(int slot, ItemStack item, boolean isEditable, ClickCallback callback) {
       if (size != null && slot >= size) return;
       inventory = inventory == null ? Bukkit.createInventory(null, type, title) : inventory;
@@ -67,10 +75,18 @@ public class GUIUtils implements Listener {
       guiMap.put(inventory, this);
     }
 
+    /**
+     * This method opens the inventory for the player
+     * @param player The player to open the inventory for
+     */
     public void open(Player player) {
       player.openInventory(this.inventory);
     }
-
+    /**
+     * This method gets the callback for a specific slot
+     * @param slot The slot to get the callback for
+     * @return The callback for the slot
+     */
     public ClickCallback getCallback(int slot) {
       return this.callbacks.get(slot);
     }
@@ -81,21 +97,20 @@ public class GUIUtils implements Listener {
     void onClick(InventoryClickEvent e);
   }
 
+  /**
+   * This method listens for inventory clicks and calls the appropriate callback
+   * @param event The event to listen for
+   */
   @EventHandler
   public void onInventoryClick(InventoryClickEvent event) {
     Inventory inventory = event.getInventory();
-    if (guiMap.containsKey(inventory)) {
-      HobbGUI gui = guiMap.get(inventory);
-      int slot = event.getRawSlot();
-      if (slot < gui.size) {
-        ClickCallback callback = gui.getCallback(slot);
-        if (callback != null) {
-          callback.onClick(event);
-        }
-        if (!gui.isEditable.get(slot)) {
-          event.setCancelled(true);
-        }
-      }
-    }
+    if (!guiMap.containsKey(inventory)) return;
+    HobbGUI gui = guiMap.get(inventory);
+    int slot = event.getRawSlot();
+    if (slot >= gui.size) return;
+    ClickCallback callback = gui.getCallback(slot);
+    event.setCancelled(gui.isEditable.get(slot) == null || !gui.isEditable.get(slot));
+    if (callback == null) return;
+    callback.onClick(event);
   }
 }

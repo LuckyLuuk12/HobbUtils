@@ -1,9 +1,7 @@
-package net.hobb.storage;
+package net.hobbnetwork.storage;
 
 import lombok.Getter;
-import lombok.Setter;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -15,7 +13,7 @@ import java.util.function.Supplier;
  * @param <T> The type of the value
  */
 @Getter
-public abstract class TypedKeyValue<T> {
+public class TypedKeyValue<T> {
   public static List<TypedKeyValue<?>> ALL;
   private final Class<T> type;
   private final Supplier<T> defaultValue;
@@ -26,7 +24,7 @@ public abstract class TypedKeyValue<T> {
    * @param type The class of the value
    * @param defaultValue The default value of the key
    */
-  TypedKeyValue(String key, Class<T> type, Supplier<T> defaultValue){
+  public TypedKeyValue(String key, Class<T> type, Supplier<T> defaultValue){
     this.key = key;
     this.type = type;
     this.defaultValue = defaultValue;

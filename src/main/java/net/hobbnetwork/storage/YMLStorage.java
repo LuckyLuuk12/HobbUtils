@@ -1,6 +1,6 @@
-package net.hobb.storage;
+package net.hobbnetwork.storage;
 
-import net.hobb.HobbUtils;
+import net.hobbnetwork.HobbUtils;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -10,7 +10,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 
@@ -68,7 +67,7 @@ public class YMLStorage extends Storage {
    * @return True if the value was set, false otherwise
    */
   @Override
-  public CompletableFuture<Boolean> setValue(@NotNull TypedKeyValue<?> tkv, @NotNull Object value) {
+  public CompletableFuture<Boolean> setValue(@NotNull TypedKeyValue<?> tkv, @Nullable Object value) {
     this.config.set(tkv.getKey(), value);
     return CompletableFuture.completedFuture(save());
   }

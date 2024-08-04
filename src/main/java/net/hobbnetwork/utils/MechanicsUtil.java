@@ -1,6 +1,6 @@
-package net.hobb.utils;
+package net.hobbnetwork.utils;
 
-import net.hobb.HobbUtils;
+import net.hobbnetwork.HobbUtils;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Rotation;

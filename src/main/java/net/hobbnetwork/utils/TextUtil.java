@@ -1,4 +1,4 @@
-package net.hobb.utils;
+package net.hobbnetwork.utils;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
