@@ -1,4 +1,8 @@
-name: Hobb
-version: '1.0'
+name: HobbUtils
+version: '1.0.0'
 main: net.hobb.Hobb
 api-version: '1.21'
+prefix: Hobb-Utils
+authors: [ LuckyLuuk_ ]
+website: https://site.hobbnetwork.net
+description: The Hobb Network utility plugin to simplify the other plugins

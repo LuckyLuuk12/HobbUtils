@@ -5,6 +5,7 @@ import net.hobb.HobbUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
@@ -13,7 +14,7 @@ import java.util.logging.Level;
  * This class is responsible for storing data in an H2 database
  * Because we use the {@link TypedKeyValue} class, we can store any type of data if we just have unique correct keys
  */
-public class H2Storage extends HobbStorage {
+public class H2Storage extends Storage {
   private static final String JDBC_URL = "jdbc:h2:./data/database"; // Change the path as needed
   private static final String USER = "sa";
   private static final String PASSWORD = "password";
@@ -83,6 +84,21 @@ public class H2Storage extends HobbStorage {
       return null;
     });
   }
+  @Override
+  public CompletableFuture<Boolean> removeValue(@NotNull TypedKeyValue<?> tkv) {
+    return CompletableFuture.supplyAsync(() -> {
+      String deleteSQL = "DELETE FROM `key_value` WHERE `key` = ?;";
+      try (PreparedStatement pstmt = connection.prepareStatement(deleteSQL)) {
+        pstmt.setString(1, tkv.getKey());
+        return pstmt.executeUpdate() != 0;
+      } catch (SQLException e) {
+        HobbUtils.getHookedPlugin().getLogger().log(Level.SEVERE, "Could not remove value!", e);
+        return false;
+      }
+    });
+  }
+
+
   /**
    * This method clears the table
    * @return True if there were rows to delete and they were deleted, false otherwise
@@ -98,7 +114,6 @@ public class H2Storage extends HobbStorage {
       }
     });
   }
-
   /**
    * This method creates a new kav_value Table using prepared statements
    * @param tableName The name of the table to create

@@ -3,6 +3,7 @@ package net.hobb.storage;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -10,17 +11,14 @@ import java.util.function.Supplier;
 
 /**
  * Represents a key-value pair that can be stored in the database, it also includes a type and a default value
+ * <b>YOU SHOULD EXTEND THIS CLASS TO CREATE YOUR OWN KEY-VALUE PAIRS IN THE ALL LIST</b>
  * @param <T> The type of the value
  */
+@Getter
 public abstract class TypedKeyValue<T> {
-  @Getter
-  @Setter
-  private static List<TypedKeyValue<?>> STATS;
-  @Getter
+  public static List<TypedKeyValue<?>> ALL;
   private final Class<T> type;
-  @Getter
   private final Supplier<T> defaultValue;
-  @Getter
   private final String key;
   /**
    * This constructor creates a new TypedKeyValue object

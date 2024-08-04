@@ -10,25 +10,27 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 
 /**
  * A class for handling YML configuration files
  */
-public class YMLConfig extends HobbStorage {
+public class YMLStorage extends Storage {
   private FileConfiguration config;
   private File configFile;
   private String configName;
 
 
   /**
-   * This constructor creates a new YMLConfig object
+   * This constructor creates a new YMLStorage object
    * Note that this method uses the hooked plugin instance as Data Folder
    * @param configName The name of the configuration file
    * @param path The optional path to the configuration file
    */
-  public YMLConfig(@NotNull String configName, String... path) {
+  public YMLStorage(@NotNull String configName, @Nullable String... path) {
+    path = path != null ? path : new String[0];
     init(configName, path);
   }
 
@@ -79,6 +81,16 @@ public class YMLConfig extends HobbStorage {
   public CompletableFuture<Object> getValue(@NotNull TypedKeyValue<?> tkv) {
     return CompletableFuture.completedFuture(tkv.getType().cast(this.config.get(tkv.getKey())));
   }
+  /**
+   * This method removes the value of a key and saves the configuration file using {@link #save()}
+   * @param tkv The key-value pair to remove the value of
+   * @return True if the value was removed, false otherwise
+   */
+  @Override
+  public CompletableFuture<Boolean> removeValue(@NotNull TypedKeyValue<?> tkv) {
+    this.config.set(tkv.getKey(), null);
+    return CompletableFuture.completedFuture(save());
+  }
 
 
   /**
@@ -119,13 +131,13 @@ public class YMLConfig extends HobbStorage {
 
 
   /**
-   * This method creates a new YMLConfig object with the given configuration file name
+   * This method creates a new YMLStorage object with the given configuration file name
    * @param configName The name of the configuration file
    * @param path The optional path to the configuration file
-   * @return The YMLConfig object
+   * @return The YMLStorage object
    */
-  @NotNull public static YMLConfig createConfig(@NotNull String configName, String... path) {
-    return new YMLConfig(configName, path);
+  @NotNull public static YMLStorage createConfig(@NotNull String configName, String... path) {
+    return new YMLStorage(configName, path);
   }
 
 
