@@ -34,11 +34,11 @@ public class GUIUtils implements Listener {
    */
   public class HobbGUI {
     private Inventory inventory;
-    private InventoryType type;
-    private Component title;
-    private Integer size;
-    private ArrayList<Boolean> isEditable;
-    private ArrayList<ClickCallback> callbacks;
+    private final InventoryType type;
+    private final Component title;
+    private final Integer size;
+    private final ArrayList<Boolean> isEditable;
+    private final ArrayList<ClickCallback> callbacks;
 
     /**
      * Creates a new HobbGUI object
