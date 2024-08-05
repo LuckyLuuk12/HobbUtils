@@ -1,6 +1,6 @@
 package net.hobbnetwork.utils;
 
-import net.hobbnetwork.HobbUtils;
+import net.hobbnetwork.managers.HookManager;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -10,7 +10,6 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,14 +18,14 @@ import java.util.HashMap;
  * A utility class for creating GUIs
  */
 public class GUIUtils implements Listener {
-
+  private final HookManager hookManager;
   private final HashMap<Inventory, HobbGUI> guiMap = new HashMap<>();
   /**
    * Creates a new GUIUtils object and registers it as a listener
    */
-  public GUIUtils() {
-    JavaPlugin plugin = HobbUtils.isNotHooked() ? HobbUtils.getThisPlugin() : HobbUtils.getHookedPlugin();
-    Bukkit.getPluginManager().registerEvents(this, plugin);
+  public GUIUtils(HookManager hookManager) {
+    this.hookManager = hookManager;
+    if(hookManager.isHooked()) Bukkit.getPluginManager().registerEvents(this, hookManager.getPlugin());
   }
 
   /**

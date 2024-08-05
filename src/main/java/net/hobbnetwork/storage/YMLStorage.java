@@ -1,6 +1,6 @@
 package net.hobbnetwork.storage;
 
-import net.hobbnetwork.HobbUtils;
+import net.hobbnetwork.managers.HookManager;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -17,6 +17,7 @@ import java.util.logging.Level;
  * A class for handling YML configuration files
  */
 public class YMLStorage extends Storage {
+  private final HookManager hookManager;
   private FileConfiguration config;
   private File configFile;
   private String configName;
@@ -25,11 +26,12 @@ public class YMLStorage extends Storage {
   /**
    * This constructor creates a new YMLStorage object
    * Note that this method uses the hooked plugin instance as Data Folder
+   * @param hookManager The HookManager object
    * @param configName The name of the configuration file
    * @param path The optional path to the configuration file
    */
-  public YMLStorage(@NotNull String configName, @Nullable String... path) {
-    path = path != null ? path : new String[0];
+  public YMLStorage(HookManager hookManager, @NotNull String configName, @Nullable String... path) {
+    this.hookManager = hookManager;
     init(configName, path);
   }
 
@@ -43,20 +45,32 @@ public class YMLStorage extends Storage {
    */
   @Override
   public CompletableFuture<Boolean> init(@NotNull String configName, String... path) {
-    this.configName = configName;
-    File configPath = path.length > 0 ? new File(HobbUtils.getHookedPlugin().getDataFolder(), path[0]) : HobbUtils.getHookedPlugin().getDataFolder();
-    this.configFile = new File(configPath, configName);
-    if(!configFile.exists()) {
-      boolean suc = configFile.getParentFile().mkdirs();
-      if(suc) HobbUtils.getHookedPlugin().saveResource(configName, false);
-    }
-    this.config = new YamlConfiguration();
+    String paths = path.length > 0 && path[0] != null ? path[0] : "yml-storage";
     try {
-      HobbUtils.getHookedPlugin().getLogger().log(Level.FINER, configName + " loaded successfully");
-      config.load(configFile);
-      return CompletableFuture.completedFuture(true);
-    } catch(IOException | InvalidConfigurationException e) {
-      HobbUtils.getHookedPlugin().getLogger().log(Level.SEVERE, configName + " failed to load!", e);
+      this.configName = configName;
+      if(!hookManager.isHooked()) return CompletableFuture.completedFuture(false);
+      File configPath = new File(hookManager.getPlugin().getDataFolder(), paths);
+      if(!configPath.exists()) {
+        boolean suc = configPath.mkdirs();
+        if(!suc) throw new IOException("[YMLStorage] Failed to create directory "+configPath);
+      }
+      this.configFile = new File(configPath, configName);
+      if(!configFile.exists()) {
+        boolean suc = configFile.getParentFile().mkdirs();
+        if(suc) hookManager.getPlugin().saveResource(configName, false);
+      }
+      this.config = new YamlConfiguration();
+      hookManager.log(Level.INFO, "[YMLStorage] Initializing " + config + " with "+configFile);
+      try {
+        config.load(configFile);
+        hookManager.log(Level.FINER, "[YMLStorage] "+configName + ".yml loaded successfully");
+        return CompletableFuture.completedFuture(true);
+      } catch(IOException | InvalidConfigurationException e) {
+        hookManager.log(Level.SEVERE, "[YMLStorage] "+hookManager.getPlugin().getDataFolder()+"\\"+paths+"\\"+configName + ".yml failed to load!", e);
+        return CompletableFuture.completedFuture(false);
+      }
+    } catch(Exception e) {
+      hookManager.log(Level.SEVERE, "[YMLStorage] Failed to initialize " + configName + ".yml", e.getStackTrace(), hookManager.getPlugin(), hookManager.getPlugin().getDataFolder(), paths);
       return CompletableFuture.completedFuture(false);
     }
   }
@@ -101,7 +115,7 @@ public class YMLStorage extends Storage {
       config.save(configFile);
       return true;
     } catch(IOException e) {
-      HobbUtils.getHookedPlugin().getLogger().log(Level.SEVERE, "Failed to save " + configName, e);
+      hookManager.log(Level.SEVERE, "[YMLStorage] Failed to save " + configName + ".yml", e);
       return false;
     }
   }
@@ -131,162 +145,13 @@ public class YMLStorage extends Storage {
 
   /**
    * This method creates a new YMLStorage object with the given configuration file name
+   * @param hookManager The HookManager object
    * @param configName The name of the configuration file
    * @param path The optional path to the configuration file
    * @return The YMLStorage object
    */
-  @NotNull public static YMLStorage createConfig(@NotNull String configName, String... path) {
-    return new YMLStorage(configName, path);
+  @NotNull public static YMLStorage createConfig(HookManager hookManager, @NotNull String configName, String... path) {
+    return new YMLStorage(hookManager, configName, path);
   }
 
-
-
-//  /**
-//   * This method saves the configuration file internally using {@link #saveConfig(Object, String...)}
-//   * @param configName The name of the configuration file
-//   * @param path The optional path to the configuration file
-//   */
-//  @Nullable static public FileConfiguration save(@NotNull String configName, String... path) {
-//    return saveConfig(configName, path);
-//  }
-//  /**
-//   * This method saves the configuration file
-//   * @param config The FileConfiguration object
-//   * @param path The optional path to the configuration file
-//   */
-//  @Nullable static public FileConfiguration save(@NotNull FileConfiguration config, String... path) {
-//    return saveConfig(config, path);
-//  }
-//  /**
-//   * This method saves the configuration file
-//   * @param obj The FileConfiguration object or the name of the configuration file
-//   * @param path The optional path to the configuration file
-//   * @return The FileConfiguration object or null if the object is not a FileConfiguration or a String
-//   */
-//  @Nullable static private FileConfiguration saveConfig(@NotNull Object obj, String... path) {
-//    if(HobbUtils.isNotHooked()) return null;
-//    if(!(obj instanceof FileConfiguration) && !(obj instanceof String )) return null;
-//    String configName = (obj instanceof FileConfiguration config) ? config.getName() : (String) obj;
-//    // Now that we have the configName, we can get the YML and save it
-//    File actualPath = path.length > 0 ? new File(HobbUtils.getHookedPlugin().getDataFolder(), path[0]) : HobbUtils.getHookedPlugin().getDataFolder();
-//    File config = new File(actualPath, configName);
-//    if(!config.exists()) {
-//      HobbUtils.getHookedPlugin().getLogger().log(Level.SEVERE, "Config file " + configName + " does not exist!");
-//      return null;
-//    }
-//    FileConfiguration actualConfig = new YamlConfiguration();
-//    try {
-//      actualConfig.save(config);
-//      HobbUtils.getHookedPlugin().getLogger().log(Level.FINER, configName + " saved successfully");
-//    } catch(IOException e) {
-//      HobbUtils.getHookedPlugin().getLogger().log(Level.SEVERE, "Failed to save " + configName, e);
-//    }
-//    return actualConfig;
-//  }
-//
-//
-//  /**
-//   * This method reloads the configuration file, internally using {@link #reloadConfig(Object, String...)}
-//   * @param configName The name of the configuration file
-//   * @param path The optional path to the configuration file
-//   * @return The FileConfiguration object
-//   */
-//  @Nullable static public FileConfiguration reload(@NotNull String configName, String... path) {
-//    return reloadConfig(configName, path);
-//  }
-//  /**
-//   * This method reloads the configuration file, internally using {@link #reloadConfig(Object, String...)}
-//   * @param config The FileConfiguration object
-//   * @param path The optional path to the configuration file
-//   */
-//  @Nullable static public FileConfiguration reload(@NotNull FileConfiguration config, String... path) {
-//    return reloadConfig(config, path);
-//  }
-//  /**
-//   * This method reloads the configuration file
-//   * @param obj The FileConfiguration object or the name of the configuration file
-//   * @param path The optional path to the configuration file
-//   * @return The FileConfiguration object or null if the object is not a FileConfiguration or a String
-//   */
-//  @Nullable static private FileConfiguration reloadConfig(@NotNull Object obj, String... path) {
-//    if(HobbUtils.isNotHooked()) return null;
-//    if(!(obj instanceof FileConfiguration) && !(obj instanceof String )) return null;
-//    String configName = (obj instanceof FileConfiguration config) ? config.getName() : (String) obj;
-//    // Now that we have the configName, we can get the YML and save it
-//    File actualPath = path.length > 0 ? new File(HobbUtils.getHookedPlugin().getDataFolder(), path[0]) : HobbUtils.getHookedPlugin().getDataFolder();
-//    File config = new File(actualPath, configName);
-//    if(!config.exists()) {
-//      HobbUtils.getHookedPlugin().getLogger().log(Level.SEVERE, "Config file " + configName + " does not exist!");
-//      return null;
-//    }
-//    FileConfiguration actualConfig = new YamlConfiguration();
-//    try {
-//      actualConfig.load(config);
-//      HobbUtils.getHookedPlugin().getLogger().log(Level.FINER, configName + " reloaded successfully");
-//    } catch(IOException | InvalidConfigurationException e) {
-//      HobbUtils.getHookedPlugin().getLogger().log(Level.SEVERE, "Failed to reload " + configName, e);
-//    }
-//    return actualConfig;
-//  }
-//
-//  /**
-//   * This method gets a configuration section or creates a new one if it doesn't exist
-//   * Internally uses {@link #getConfigSection(Object, String, String...)}
-//   * @param config The FileConfiguration object
-//   * @param section The name of the section
-//   * @param path The optional path to the configuration file
-//   * @return The ConfigurationSection object
-//   */
-//  @Nullable static public ConfigurationSection getSection(@NotNull FileConfiguration config, String section, String... path) {
-//    return getConfigSection(config, section, path);
-//  }
-//  /**
-//   * This method gets a configuration section or creates a new one if it doesn't exist
-//   * Internally uses {@link #getConfigSection(Object, String, String...)}
-//   * @param configName The name of the configuration file
-//   * @param section The name of the section
-//   * @param path The optional path to the configuration file
-//   * @return The ConfigurationSection object
-//   */
-//  @Nullable static public ConfigurationSection getSection(@NotNull String configName, String section, String... path) {
-//    return getConfigSection(configName, section, path);
-//  }
-//  /**
-//   * This method gets a configuration section or creates a new one if it doesn't exist
-//   * @param obj The FileConfiguration object or the name of the configuration file
-//   * @param section The name of the section
-//   * @param path The optional path to the configuration file
-//   * @return The ConfigurationSection object
-//   */
-//  @Nullable static public ConfigurationSection getConfigSection(@NotNull Object obj, String section, String... path) {
-//    if(HobbUtils.isNotHooked()) return null;
-//    if(!(obj instanceof FileConfiguration) && !(obj instanceof String )) return null;
-//    String configName = (obj instanceof FileConfiguration config) ? config.getName() : (String) obj;
-//    // Now that we have the configName, we can get the YML and get the section
-//    File actualPath = path.length > 0 ? new File(HobbUtils.getHookedPlugin().getDataFolder(), path[0]) : HobbUtils.getHookedPlugin().getDataFolder();
-//    File config = new File(actualPath, configName);
-//    if(isNotExistingConfig(configName, path)) return null;
-//    FileConfiguration actualConfig = new YamlConfiguration();
-//    if(actualConfig.getConfigurationSection(section) == null) {
-//      actualConfig.createSection(section);
-//      saveConfig(actualConfig, path);
-//    }
-//    return actualConfig.getConfigurationSection(section);
-//  }
-//
-//
-//  /**
-//   * This method checks if a configuration file exists
-//   * It also logs a severe message if the configuration file does not exist
-//   * @param configName The name of the configuration file
-//   * @param path The optional path to the configuration file
-//   * @return Whether the configuration file exists
-//   */
-//  static private boolean isNotExistingConfig(@NotNull String configName, String... path) {
-//    if(HobbUtils.isNotHooked()) return true;
-//    File actualPath = path.length > 0 ? new File(HobbUtils.getHookedPlugin().getDataFolder(), path[0]) : HobbUtils.getHookedPlugin().getDataFolder();
-//    File newConfig = new File(actualPath, configName);
-//    if(!newConfig.exists()) HobbUtils.getHookedPlugin().getLogger().log(Level.SEVERE, "Config file " + configName + " does not exist!");
-//    return !newConfig.exists();
-//  }
 }

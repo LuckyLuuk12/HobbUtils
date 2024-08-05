@@ -1,6 +1,6 @@
 package net.hobbnetwork.utils;
 
-import net.hobbnetwork.HobbUtils;
+import net.hobbnetwork.managers.HookManager;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Rotation;
@@ -26,16 +26,16 @@ import java.util.List;
 public class MechanicsUtil {
   /**
    * This method hides an entity from all players except the ones specified
-   * Note that this method does not implement un-hiding on purpose, please use {@link #showEntityForAll(Entity, Player...)} for that
+   * Note that this method does not implement un-hiding on purpose, please use {@link #showEntityForAll(HookManager, Entity, Player...)} for that
    * @param toBeHidden The entity to be hidden
    * @param except The players that will still see the entity (optional)
    */
-  static public void hideEntityForAll(@Nullable Entity toBeHidden, Player... except) {
-    if(HobbUtils.isNotHooked()) return;
+  static public void hideEntityForAll(HookManager hookManager, @Nullable Entity toBeHidden, Player... except) {
+    if(!hookManager.isHooked()) return;
     if(toBeHidden == null) return;
     ArrayList<Player> exceptions = new ArrayList<>(List.of(except));
-    for(Player p : HobbUtils.getHookedPlugin().getServer().getOnlinePlayers()) {
-      if(!exceptions.contains(p) ) p.hideEntity(HobbUtils.getHookedPlugin(), toBeHidden);
+    for(Player p : hookManager.getPlugin().getServer().getOnlinePlayers()) {
+      if(!exceptions.contains(p) ) p.hideEntity(hookManager.getPlugin(), toBeHidden);
     }
   }
   /**
@@ -43,12 +43,12 @@ public class MechanicsUtil {
    * @param toBeUnhidden The entity to be shown
    * @param except The players that will not see the entity (optional)
    */
-  static public void showEntityForAll(@Nullable Entity toBeUnhidden, Player... except) {
-    if(HobbUtils.isNotHooked()) return;
+  static public void showEntityForAll(HookManager hookManager, @Nullable Entity toBeUnhidden, Player... except) {
+    if(!hookManager.isHooked()) return;
     if(toBeUnhidden == null) return;
     ArrayList<Player> exceptions = new ArrayList<>(List.of(except));
-    for(Player p : HobbUtils.getHookedPlugin().getServer().getOnlinePlayers()) {
-      if(!exceptions.contains(p) ) p.showEntity(HobbUtils.getHookedPlugin(), toBeUnhidden);
+    for(Player p : hookManager.getPlugin().getServer().getOnlinePlayers()) {
+      if(!exceptions.contains(p) ) p.showEntity(hookManager.getPlugin(), toBeUnhidden);
     }
   }
 

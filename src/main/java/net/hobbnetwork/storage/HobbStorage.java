@@ -1,15 +1,17 @@
 package net.hobbnetwork.storage;
 
 import lombok.Getter;
-import net.hobbnetwork.HobbUtils;
+import net.hobbnetwork.managers.HookManager;
 
 import java.util.ArrayList;
+import java.util.logging.Level;
 
 /**
  * This class is a wrapper for the different types of storage
  */
+@Getter
 public class HobbStorage {
-  @Getter
+  private final HookManager hookManager;
   private Storage storage;
   private String name;
   private String path;
@@ -22,27 +24,28 @@ public class HobbStorage {
    *                index 0: The name of the table/yml file
    *                index 1: The path to the file (if needed)
    */
-  public HobbStorage(StorageType type, String... options) {
-    if(HobbUtils.isNotHooked()) {
-      HobbUtils.getThisPlugin().getLogger().warning("HobbStorage is not hooked!");
+  public HobbStorage(HookManager hookManager, StorageType type, String... options) {
+    this.hookManager = hookManager;
+    if(!hookManager.isHooked()) {
+      hookManager.log(Level.SEVERE, "HobbStorage is not hooked!");
       return;
     }
-    this.name = options.length > 0 ? options[0] : "key_value";
+    this.name = options.length > 0 ? options[0] : "hobb-storage";
     this.path = options.length > 1 ? options[1] : null;
     if(type == StorageType.H2) {
-      storage = new H2Storage();
+      storage = new H2Storage(hookManager);
     } else if(type == StorageType.YML) {
-      storage = new YMLStorage(this.name, this.path);
+      storage = new YMLStorage(hookManager, this.name, this.path);
     } else {
-      storage = new YMLStorage(this.name, this.path);
+      storage = new YMLStorage(hookManager, this.name, this.path);
     }
     boolean canInit = storage.init(this.name).join();
     if(canInit) return;
-    HobbUtils.getThisPlugin().getLogger().warning("Could not initialize storage, falling back to YML");
-    storage = new YMLStorage(this.name, this.path);
+    hookManager.log(Level.SEVERE,"[HobbStorage] Could not initialize storage, falling back to YML");
+    storage = new YMLStorage(hookManager, this.name, this.path);
     boolean fallBackInit = storage.init(this.name).join();
     if(fallBackInit) return;
-    HobbUtils.getThisPlugin().getLogger().severe("Could not initialize fallback storage, disabling HobbStorage");
+    hookManager.log(Level.SEVERE,"[HobbStorage] Could not initialize fallback storage, disabling HobbStorage");
   }
 
   /**
@@ -55,7 +58,7 @@ public class HobbStorage {
     if(storage instanceof YMLStorage ymlStorage) {
       return ymlStorage.save();
     } else {
-      YMLStorage ymlStorage = new YMLStorage(this.name, this.path);
+      YMLStorage ymlStorage = new YMLStorage(hookManager, this.name, this.path);
       TypedKeyValue.ALL.forEach((tkv) -> this.storage.getValue(tkv).thenAccept((value) -> ymlStorage.setValue(tkv, value).thenAccept(success::add)));
     }
     return success.stream().allMatch((b) -> b);
