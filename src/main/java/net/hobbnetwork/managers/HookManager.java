@@ -5,17 +5,14 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Getter
 public class HookManager {
-  private boolean hooked;
-  private JavaPlugin plugin;
-  private boolean debug;
+  private final boolean hooked;
+  private final JavaPlugin plugin;
+  private final boolean debug;
   /**
    * Use this method to hook a plugin into the Hobb Utils
    * @param plugin The plugin to hook
