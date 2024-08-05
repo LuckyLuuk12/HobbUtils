@@ -44,11 +44,11 @@ public class HookManager {
     }
     // If the Level is FINEST, FINE or INFO, log the message in a custom color
     if (level.equals(Level.FINEST) || level.equals(Level.FINE)) { // FINE = Lime
-      logger.log(Level.INFO, "§a" + msg + "§r");
+      logger.log(Level.INFO, "\u00A7a" + msg + "\u00A7r");
       return;
     }
     if (level.equals(Level.INFO)) { // INFO = Pink
-      logger.log(Level.INFO, "§d" + msg + "§r");
+      logger.log(Level.INFO, "\u00A7d" + msg + "\u00A7r");
       return;
     }
     // Log the normal way
