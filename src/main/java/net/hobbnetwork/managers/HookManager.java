@@ -1,6 +1,7 @@
 package net.hobbnetwork.managers;
 
 import lombok.Getter;
+import org.bukkit.ChatColor;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.PrintWriter;
@@ -44,11 +45,11 @@ public class HookManager {
     }
     // If the Level is FINEST, FINE or INFO, log the message in a custom color
     if (level.equals(Level.FINEST) || level.equals(Level.FINE)) { // FINE = Lime
-      logger.log(Level.INFO, "\u00A7a" + msg + "\u00A7r");
+      logger.log(Level.INFO, ChatColor.GREEN + msg.toString() + ChatColor.RESET);
       return;
     }
     if (level.equals(Level.INFO)) { // INFO = Pink
-      logger.log(Level.INFO, "\u00A7d" + msg + "\u00A7r");
+      logger.log(Level.INFO, ChatColor.DARK_PURPLE + msg.toString() + ChatColor.RESET);
       return;
     }
     // Log the normal way
