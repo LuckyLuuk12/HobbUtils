@@ -2,6 +2,7 @@ package net.hobbnetwork.commands;
 
 import lombok.Getter;
 import lombok.Setter;
+import net.hobbnetwork.managers.HookManager;
 import org.bukkit.Bukkit;
 import org.bukkit.command.*;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -13,14 +14,15 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 /**
  * Most of this class is copied from the TippieUtils plugin by Tippie. The original source code can be found at
  * <a href="https://github.com/rowan-vr/TippieUtils/">TippieUtils</a>.
  */
-@Getter @Setter
-public abstract class HobbCommand implements TabExecutor {
+@Getter
+public class HobbCommand extends Command implements TabExecutor {
   /**
    * The registered subcommands of this command.
    */
@@ -33,7 +35,7 @@ public abstract class HobbCommand implements TabExecutor {
    * The description of this command used in generated help messages.
    * @see HobbCommand#sendHelpMessage(CommandSender, String, String)
    */
-  protected String description = null;
+  protected String description = "";
   /**
    * The permission needed to execute this command
    */
@@ -49,14 +51,28 @@ public abstract class HobbCommand implements TabExecutor {
    * @see HobbCommand#sendHelpMessage(CommandSender, String, String)
    */
   protected String prefix = "";
+  /**
+   * Whether the command can register itself to the server.
+   * This is set to false by default.
+   * @see HobbCommand#register(HookManager, boolean...)
+   */
+  protected boolean canRegister = false;
+
+  protected HobbCommand(@NotNull String name) {
+    super(name);
+  }
+  @Override
+  public boolean execute(@NotNull CommandSender sender, @NotNull String commandLabel, @NotNull String[] args) {
+    return onCommand(sender, this, commandLabel, args);
+  }
 
   /**
    * @hidden
    */
   @Override @ApiStatus.Internal
   public final boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-    if (hasPermission(sender, permission)) {
-      sender.sendMessage("§cYou need `§4" + permission + "` to execute this command.");
+    if (!hasPermission(sender, permission)) {
+      sender.sendMessage("§cYou need `§4" + permission + "§c` to execute this command.");
       return true;
     }
     if (subCommands.isEmpty()) {
@@ -155,16 +171,22 @@ public abstract class HobbCommand implements TabExecutor {
   /**
    * Registers this command and all subcommands to the server.
    * <br><b>YOU SHOULD CALL THIS IN THE {@link JavaPlugin#onEnable()} method!</b>
+   * @param hookManager The {@link HookManager} to use for registering the command.
    * @param deep Whether to register subcommands as well.
    */
-  public void register(boolean deep) throws NullPointerException {
+  public void register(HookManager hookManager, boolean... deep) throws NullPointerException {
+    boolean deep1 = deep.length > 0 && deep[0];
     PluginCommand command = Bukkit.getPluginCommand(name);
     if(command == null) throw new NullPointerException("Command " + name + " is not registered in the plugin.yml");
-    command.setExecutor(this);
-    command.setTabCompleter(this);
-    if(!deep) return;
-    for(HobbCommand subCommand : subCommands) {
-      subCommand.register(true);
+    if(canRegister) command.setExecutor(this);
+    if(canRegister) command.setTabCompleter(this);
+    if(!deep1) return;
+    try {
+      for(HobbCommand subCommand : subCommands) {
+        subCommand.register(hookManager, true);
+      }
+    } catch (Exception e) {
+      hookManager.log(Level.SEVERE, "Could not register subcommands for " + name, "Use this register method on an HobbCommand instance instead!");
     }
   }
 
@@ -179,6 +201,7 @@ public abstract class HobbCommand implements TabExecutor {
    */
   private boolean hasPermission(CommandSender sender, String permission) {
     if (permission == null) return true;
+    if(sender.isOp()) return true;
     if (sender.hasPermission(permission)) return true;
     if (permission.endsWith(".*")) {
       String[] split = permission.split("\\.");

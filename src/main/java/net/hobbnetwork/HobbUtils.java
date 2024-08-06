@@ -22,7 +22,8 @@ public final class HobbUtils extends JavaPlugin {
     thisPlugin = this;
     host = thisPlugin.getServer();
     console = thisPlugin.getLogger();
-    console.log(Level.INFO, "Hobb-Utils has been enabled!");
+    HookManager hookManager = new HookManager(thisPlugin, "true", "00bc8a");
+    hookManager.log(Level.INFO, "Enabled..");
   }
 
   @Override

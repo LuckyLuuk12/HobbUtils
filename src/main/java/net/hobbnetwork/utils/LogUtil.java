@@ -26,8 +26,10 @@ public class LogUtil {
     }
     logger.setUseParentHandlers(false);
     ConsoleHandler handler = new ConsoleHandler();
+    handler.setLevel(Level.ALL);
     handler.setFormatter(new ColorFormatter());
     logger.addHandler(handler);
+    logger.setLevel(Level.ALL);
   }
   /**
    * This method logs a message to the console using the plugin's logger if it is hooked
