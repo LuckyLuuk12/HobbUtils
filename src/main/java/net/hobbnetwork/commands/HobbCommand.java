@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
  * <a href="https://github.com/rowan-vr/TippieUtils/">TippieUtils</a>.
  */
 @Getter
-public class HobbCommand extends Command implements TabExecutor {
+public class HobbCommand implements TabExecutor {
   /**
    * The registered subcommands of this command.
    */
@@ -57,14 +57,6 @@ public class HobbCommand extends Command implements TabExecutor {
    * @see HobbCommand#register(HookManager, boolean...)
    */
   protected boolean canRegister = false;
-
-  protected HobbCommand(@NotNull String name) {
-    super(name);
-  }
-  @Override
-  public boolean execute(@NotNull CommandSender sender, @NotNull String commandLabel, @NotNull String[] args) {
-    return onCommand(sender, this, commandLabel, args);
-  }
 
   /**
    * @hidden
