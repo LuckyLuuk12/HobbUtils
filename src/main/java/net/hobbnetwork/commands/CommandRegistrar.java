@@ -18,7 +18,7 @@ public class CommandRegistrar {
   }
 
   public void registerCommand(String name, HobbCommand executor) {
-    Bukkit.getCommandMap().register(name, executor);
+//    Bukkit.getCommandMap().register(name, executor);
     PluginCommand command = Bukkit.getPluginCommand(name);
     if(command == null) return;
     command.setExecutor(executor);
