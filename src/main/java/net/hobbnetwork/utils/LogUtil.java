@@ -21,7 +21,7 @@ public class LogUtil {
   private void setupLogger() {
     Logger logger = hookManager.isHooked() ? hookManager.getPlugin().getLogger() : Logger.getGlobal();
     // Remove existing handlers to avoid duplicate logging
-    for (var handler : logger.getHandlers()) {
+    for(var handler : logger.getHandlers()) {
       logger.removeHandler(handler);
     }
     ConsoleHandler handler = new ConsoleHandler();
@@ -30,32 +30,18 @@ public class LogUtil {
   }
   /**
    * This method logs a message to the console using the plugin's logger if it is hooked
-   * @see LogLevel
-   * @param lvl The level of the message
+   *
+   * @param lvl     The level of the message
    * @param message The message to log
+   * @see LogLevel
    */
-  public void log(LogLevel lvl, Object... message) {
+  public void log(Level lvl, Object... message) {
     Logger logger = hookManager.getPlugin().getLogger();
     StringBuilder msg = new StringBuilder();
-    for (Object e : message) {
+    for(Object e : message) {
       msg.append(e.toString()).append("\n");
     }
     logger.log(lvl, msg.toString());
-  }
-  /**
-   * This method accepts a {@link Level} and converts it to a {@link LogLevel} and then calls {@link #log(LogLevel, Object...)}
-   * @param lvl The level of the message
-   * @param message The message to log
-   */
-  public void log(Level lvl, Object... message) {
-    if(lvl.equals(Level.SEVERE)) log(LogLevel.CRASH, message);
-    else if(lvl.equals(Level.WARNING)) log(LogLevel.WARN, message);
-    else if(lvl.equals(Level.INFO)) log(LogLevel.TEXT, message);
-    else if(lvl.equals(Level.CONFIG)) log(LogLevel.TEST, message);
-    else if(lvl.equals(Level.FINE)) log(LogLevel.GOOD, message);
-    else if(lvl.equals(Level.FINER)) log(LogLevel.BETTER, message);
-    else if(lvl.equals(Level.FINEST)) log(LogLevel.BEST, message);
-    else log(LogLevel.TEXT, message);
   }
 
   /**
@@ -74,14 +60,14 @@ public class LogUtil {
    */
   @Getter
   public static class LogLevel extends Level {
-    public static final LogLevel BEST = new LogLevel("FINEST", 300, "045300");
-    public static final LogLevel BETTER = new LogLevel("FINER", 400, "2ea025");
-    public static final LogLevel GOOD = new LogLevel("FINE", 500, "bcff9e");
+    public static final LogLevel BEST = new LogLevel("BEST", 300, "045300");
+    public static final LogLevel BETTER = new LogLevel("BETTER", 400, "2ea025");
+    public static final LogLevel GOOD = new LogLevel("GOOD", 500, "bcff9e");
     public static final LogLevel DEBUG = new LogLevel("DEBUG", 600, "ce70ff");
     public static final LogLevel TEST = new LogLevel("TEST", 700, "ff00ff");
-    public static final LogLevel TEXT = new LogLevel("INFO", 800, "FBFBFB");
-    public static final LogLevel WARN = new LogLevel("WARNING", 900, "eeef7a");
-    public static final LogLevel ERROR = new LogLevel("SEVERE", 1000, "ff8994");
+    public static final LogLevel TEXT = new LogLevel("TEXT", 800, "FBFBFB");
+    public static final LogLevel WARN = new LogLevel("WARN", 900, "eeef7a");
+    public static final LogLevel ERROR = new LogLevel("ERROR", 1000, "ff8994");
     public static final LogLevel CRASH = new LogLevel("CRASH", 1100, "7d1c25");
 
     private final String color;
@@ -91,17 +77,40 @@ public class LogUtil {
       this.color = color;
     }
 
+    /**
+     * This method translates a {@link Level} to a {@link LogLevel}. If the level is an instance of {@link LogLevel}, it will return itself.
+     * @param lvl The level to translate
+     * @return Itself if the level is a {@link LogLevel}, otherwise a new {@link LogLevel} based on the {@link Level}
+     */
+    public static LogLevel translate(Level lvl) {
+      if(lvl instanceof LogLevel l) return l;
+      else if(lvl.equals(Level.ALL)) return CRASH;
+      else if(lvl.equals(Level.SEVERE)) return ERROR;
+      else if(lvl.equals(Level.WARNING)) return WARN;
+      else if(lvl.equals(Level.INFO)) return TEXT;
+      else if(lvl.equals(Level.CONFIG)) return TEST;
+      else if(lvl.equals(Level.FINE)) return GOOD;
+      else if(lvl.equals(Level.FINER)) return BETTER;
+      else if(lvl.equals(Level.FINEST)) return BEST;
+      else return TEXT;
+    }
+
   }
 
   private static class ColorFormatter extends Formatter {
     @Override
     public String format(LogRecord record) {
-      String color = ((LogLevel) record.getLevel()).getColor();
-      return String.format("\u001B[38;2;%s;%s;%sm%s\u001B[0m",
-        Integer.valueOf(color.substring(0, 2), 16),
-        Integer.valueOf(color.substring(2, 4), 16),
-        Integer.valueOf(color.substring(4, 6), 16),
-        formatMessage(record));
+      String color = (LogLevel.translate(record.getLevel())).getColor();
+      String[] lines = formatMessage(record).split("\n");
+      StringBuilder formattedMessage = new StringBuilder();
+      for(String line : lines) {
+        formattedMessage.append(String.format("\u001B[38;2;%s;%s;%sm%s\u001B[0m\n",
+          Integer.valueOf(color.substring(0, 2), 16),
+          Integer.valueOf(color.substring(2, 4), 16),
+          Integer.valueOf(color.substring(4, 6), 16),
+          line));
+      }
+      return formattedMessage.toString();
     }
   }
 
