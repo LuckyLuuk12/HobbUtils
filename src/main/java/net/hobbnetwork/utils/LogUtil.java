@@ -103,7 +103,11 @@ public class LogUtil {
     public String format(LogRecord record) {
       String color = (LogLevel.translate(record.getLevel())).getColor();
       String pluginName = hookManager.getPlugin().getName();
-      String pluginColor = "\u001B[38;2;128;0;128m"; // Purple color
+      String pluginColor = String.format("\u001B[38;2;%s;%s;%sm",
+        Integer.valueOf(hookManager.getPrefixHex().substring(0, 2), 16),
+        Integer.valueOf(hookManager.getPrefixHex().substring(2, 4), 16),
+        Integer.valueOf(hookManager.getPrefixHex().substring(4, 6), 16)
+      );
       String resetColor = "\u001B[0m";
       String[] lines = formatMessage(record).split("\n");
       StringBuilder formattedMessage = new StringBuilder();

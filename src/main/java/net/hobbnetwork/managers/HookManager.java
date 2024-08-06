@@ -14,16 +14,18 @@ public class HookManager {
   private final boolean hooked;
   private final JavaPlugin plugin;
   private final boolean debug;
+  private final String prefixHex;
   /**
    * Use this method to hook a plugin into the Hobb Utils
    * @param plugin The plugin to hook
    * @param options The options to use for the hook <br>
    *                index 0: Whether to enable debug mode
    */
-  public HookManager(JavaPlugin plugin, boolean... options) {
+  public HookManager(JavaPlugin plugin, String... options) {
     this.plugin = plugin;
     this.hooked = true;
-    this.debug = options.length > 0 && options[0];
+    this.debug = options.length > 0 && options[0].equals("true");
+    this.prefixHex = options.length > 1 ? options[1] : "#00fdff";
   }
   /**
    * This method logs a message to the console using the plugin's logger if it is hooked
