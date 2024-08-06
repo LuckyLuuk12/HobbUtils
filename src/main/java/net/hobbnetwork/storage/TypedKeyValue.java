@@ -44,4 +44,21 @@ public class TypedKeyValue<T> {
   public CompletableFuture<Boolean> exists(H2Storage storage){
     return storage.getValue(this).thenApply(Objects::nonNull);
   }
+
+  @Override
+  public int hashCode() {
+    return key.hashCode();
+  }
+
+  /**
+   * This method checks whether a TypedKeyValue object is equal to another object
+   * NOTE that this only checks if the key is equal
+   */
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    TypedKeyValue<?> that = (TypedKeyValue<?>) o;
+    return key.equals(that.key);
+  }
 }

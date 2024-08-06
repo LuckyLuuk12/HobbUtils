@@ -4,6 +4,7 @@ import lombok.Getter;
 import net.hobbnetwork.managers.HookManager;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.logging.Level;
 
 /**
@@ -11,6 +12,7 @@ import java.util.logging.Level;
  */
 @Getter
 public class HobbStorage {
+  private final HashMap<TypedKeyValue<?>, Object> data = new HashMap<>();
   private final HookManager hookManager;
   private Storage storage;
   private String name;
@@ -63,6 +65,25 @@ public class HobbStorage {
     }
     return success.stream().allMatch((b) -> b);
   }
+  /**
+   * This method gets the value of a key either from the data map or from the storage
+   * @param tkv The key to get the value of
+   * @return The value of the key
+   */
+  public Object get(TypedKeyValue<?> tkv) {
+    return data.containsKey(tkv) ? data.get(tkv) : storage.getValue(tkv).join();
+  }
+  /**
+   * This method sets the value of a key, as well as updating the storage
+   * @param tkv The key to set the value of
+   * @param value The value to set
+   */
+  public void set(TypedKeyValue<?> tkv, Object value) {
+    data.put(tkv, value);
+    storage.setValue(tkv, value).join();
+  }
+
+
 
   public enum StorageType {
     YML,

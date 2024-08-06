@@ -128,6 +128,7 @@ public class H2Storage extends Storage {
    * @param tableName The name of the table to create
    * @return Whether the table was created successfully
    */
+  // TODO: check if we shouldn't use JAVA_OBJECT instead of blob and change the (de)serialization code
   public CompletableFuture<Boolean> createTable(String tableName) {
     return CompletableFuture.supplyAsync(() -> {
       String createSQL = "CREATE TABLE IF NOT EXISTS `key_value` (`key` VARCHAR(255) NOT NULL PRIMARY KEY, `value` BLOB NOT NULL);";
