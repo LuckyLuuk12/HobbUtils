@@ -1,7 +1,7 @@
 package net.hobbnetwork.managers;
 
 import lombok.Getter;
-import org.bukkit.ChatColor;
+import net.hobbnetwork.utils.LogUtil;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.PrintWriter;
@@ -32,28 +32,8 @@ public class HookManager {
    * @param message The message to log
    */
   public void log(Level level, Object... message) {
-    Logger logger = hooked ? plugin.getLogger() : Logger.getGlobal();
-    StringBuilder msg = new StringBuilder();
-    for (Object e : message) {
-      if (e instanceof Throwable t) {
-        StringWriter sw = new StringWriter();
-        t.printStackTrace(new PrintWriter(sw));
-        msg.append(debug ? sw : t.getMessage()).append("\n");
-      } else {
-        msg.append(e.toString()).append("\n");
-      }
-    }
-    // If the Level is FINEST, FINE or INFO, log the message in a custom color
-    if (level.equals(Level.FINEST) || level.equals(Level.FINE)) { // FINE = Lime
-      logger.log(Level.INFO, ChatColor.GREEN + msg.toString() + ChatColor.RESET);
-      return;
-    }
-    if (level.equals(Level.INFO)) { // INFO = Pink
-      logger.log(Level.INFO, ChatColor.DARK_PURPLE + msg.toString() + ChatColor.RESET);
-      return;
-    }
-    // Log the normal way
-    logger.log(level, msg.toString());
+    LogUtil logUtil = new LogUtil(this);
+    logUtil.log(level, message);
   }
 
 }
