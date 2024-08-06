@@ -5,6 +5,7 @@ import net.hobbnetwork.managers.HookManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 
 /**
@@ -70,17 +71,17 @@ public class HobbStorage {
    * @param tkv The key to get the value of
    * @return The value of the key
    */
-  public Object get(TypedKeyValue<?> tkv) {
-    return data.containsKey(tkv) ? data.get(tkv) : storage.getValue(tkv).join();
+  public CompletableFuture<Object> getValue(TypedKeyValue<?> tkv) {
+    return data.containsKey(tkv) ? CompletableFuture.completedFuture(data.get(tkv)) : storage.getValue(tkv);
   }
   /**
    * This method sets the value of a key, as well as updating the storage
    * @param tkv The key to set the value of
    * @param value The value to set
    */
-  public void set(TypedKeyValue<?> tkv, Object value) {
+  public CompletableFuture<Boolean> setValue(TypedKeyValue<?> tkv, Object value) {
     data.put(tkv, value);
-    storage.setValue(tkv, value).join();
+    return storage.setValue(tkv, value);
   }
 
 

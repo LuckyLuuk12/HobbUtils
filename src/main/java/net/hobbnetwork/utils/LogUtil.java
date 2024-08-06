@@ -24,6 +24,7 @@ public class LogUtil {
     for(var handler : logger.getHandlers()) {
       logger.removeHandler(handler);
     }
+    logger.setUseParentHandlers(false);
     ConsoleHandler handler = new ConsoleHandler();
     handler.setFormatter(new ColorFormatter());
     logger.addHandler(handler);
@@ -97,18 +98,22 @@ public class LogUtil {
 
   }
 
-  private static class ColorFormatter extends Formatter {
+  private class ColorFormatter extends Formatter {
     @Override
     public String format(LogRecord record) {
       String color = (LogLevel.translate(record.getLevel())).getColor();
+      String pluginName = hookManager.getPlugin().getName();
+      String pluginColor = "\u001B[38;2;128;0;128m"; // Purple color
+      String resetColor = "\u001B[0m";
       String[] lines = formatMessage(record).split("\n");
       StringBuilder formattedMessage = new StringBuilder();
-      for(String line : lines) {
-        formattedMessage.append(String.format("\u001B[38;2;%s;%s;%sm%s\u001B[0m\n",
+      for (String line : lines) {
+        formattedMessage.append(String.format("%s[%s]%s \u001B[38;2;%s;%s;%sm%s%s\n",
+          pluginColor, pluginName, resetColor,
           Integer.valueOf(color.substring(0, 2), 16),
           Integer.valueOf(color.substring(2, 4), 16),
           Integer.valueOf(color.substring(4, 6), 16),
-          line));
+          line, resetColor));
       }
       return formattedMessage.toString();
     }

@@ -2,6 +2,7 @@ package net.hobbnetwork.storage;
 
 
 import net.hobbnetwork.managers.HookManager;
+import net.hobbnetwork.utils.LogUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,9 +33,9 @@ public class H2Storage extends Storage {
       Class.forName("org.h2.Driver");
       connection = DriverManager.getConnection(jdbcUrl, USER, PASSWORD);
       String couldInit = init("hobb-storage").get() ? "Successfully initialized" : "Could not Initialize";
-      hookManager.log(Level.WARNING, "[H2Storage] " + couldInit + " H2 storage!");
+      hookManager.log(LogUtil.LogLevel.DEBUG, "[H2Storage] " + couldInit + " H2 storage!");
     } catch (ClassNotFoundException | SQLException | IllegalStateException | InterruptedException | ExecutionException e) {
-      hookManager.log(Level.SEVERE, "[H2Storage] Initializing the H2 Database failed!", e);
+      hookManager.log(LogUtil.LogLevel.CRASH, "[H2Storage] Initializing the H2 Database failed!", e);
     }
   }
   private static @NotNull String getH2URL(HookManager hookManager) {
@@ -126,17 +127,20 @@ public class H2Storage extends Storage {
   /**
    * This method creates a new kav_value Table using prepared statements
    * @param tableName The name of the table to create
-   * @return Whether the table was created successfully
+   * @return True if the table was created successfully or if it already exists, false otherwise
    */
   // TODO: check if we shouldn't use JAVA_OBJECT instead of blob and change the (de)serialization code
   public CompletableFuture<Boolean> createTable(String tableName) {
     return CompletableFuture.supplyAsync(() -> {
       String createSQL = "CREATE TABLE IF NOT EXISTS `key_value` (`key` VARCHAR(255) NOT NULL PRIMARY KEY, `value` BLOB NOT NULL);";
       try(Statement stmt = connection.createStatement()) {
-        hookManager.log(Level.INFO, "[H2Storage] Creating table `key_value`");
-        return !stmt.execute(createSQL);
+        boolean suc = !stmt.execute(createSQL);
+        int rows = stmt.getUpdateCount();
+        if(rows == 1) hookManager.log(Level.FINE, "[H2Storage] Creating table `key_value`");
+        if(rows == 0) hookManager.log(Level.FINEST, "[H2Storage] `key_value` table was found!");
+        return suc;
       } catch(SQLException e) {
-        hookManager.log(Level.SEVERE, "[H2Storage] Could not create table `" + tableName + "` "+e.getMessage());
+        hookManager.log(LogUtil.LogLevel.CRASH, "[H2Storage] Could not create table `" + tableName + "` "+e.getMessage());
         return false;
       }
     });

@@ -1,6 +1,7 @@
 package net.hobbnetwork.storage;
 
 import net.hobbnetwork.managers.HookManager;
+import net.hobbnetwork.utils.LogUtil;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -60,10 +61,10 @@ public class YMLStorage extends Storage {
         if(suc) hookManager.getPlugin().saveResource(configName, false);
       }
       this.config = new YamlConfiguration();
-      hookManager.log(Level.INFO, "[YMLStorage] Initializing " + config + " with "+configFile);
+      hookManager.log(LogUtil.LogLevel.DEBUG, "[YMLStorage] Initializing " + config + " with "+configFile);
       try {
         config.load(configFile);
-        hookManager.log(Level.FINER, "[YMLStorage] "+configName + ".yml loaded successfully");
+        hookManager.log(Level.FINEST, "[YMLStorage] "+configName + ".yml loaded successfully");
         return CompletableFuture.completedFuture(true);
       } catch(IOException | InvalidConfigurationException e) {
         hookManager.log(Level.SEVERE, "[YMLStorage] "+hookManager.getPlugin().getDataFolder()+"\\"+paths+"\\"+configName + ".yml failed to load!", e);
