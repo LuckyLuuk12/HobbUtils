@@ -21,13 +21,17 @@ public class Safeguards implements Listener {
    */
   @EventHandler
   public void preventServerReloadByPlayer(PlayerCommandPreprocessEvent e) {
-    e.setCancelled(e.getMessage().equalsIgnoreCase("/reload confirm"));
+    if(!e.getMessage().equalsIgnoreCase("reload confirm")) return;
+    e.setCancelled(true);
+    e.getPlayer().sendMessage("§4Reloading breaks the server, don't even dare try this again!");
   }
   /**
    * This specific event handler prevents any <b>non-</b>{@link org.bukkit.entity.Player} from using /reload confirm
    */
   @EventHandler
   public void preventServerReloadByConsole(ServerCommandEvent e) {
-    e.setCancelled(e.getCommand().equalsIgnoreCase("reload confirm"));
+    if(!e.getCommand().equalsIgnoreCase("reload confirm")) return;
+    e.setCancelled(true);
+    e.getSender().sendMessage("§4Reloading breaks the server, don't even dare try this again!");
   }
 }

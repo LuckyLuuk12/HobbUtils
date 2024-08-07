@@ -13,6 +13,7 @@ public class HookManager {
   private final JavaPlugin plugin;
   private final boolean debug;
   private final String prefixHex;
+  private final boolean loggingToFile;
   /**
    * Use this method to hook a plugin into the Hobb Utils
    * This class will also initiate the {@link Safeguards} class
@@ -20,12 +21,14 @@ public class HookManager {
    * @param options The options to use for the hook <br>
    *                index 0: Whether to enable debug mode
    *                index 1: The prefix color in hex, default is #00fdff
+   *                index 2: Whether to log to a file instead of the console
    */
   public HookManager(JavaPlugin plugin, String... options) {
     this.plugin = plugin;
     this.hooked = true;
     this.debug = options.length > 0 && options[0].equals("true");
     this.prefixHex = options.length > 1 && options[1].length() == 6 ? options[1] : "#00fdff";
+    this.loggingToFile = options.length > 2 && options[2].equals("true");
     new Safeguards(this.plugin);
   }
   /**

@@ -2,17 +2,19 @@ package net.hobbnetwork.utils;
 
 import lombok.Getter;
 import net.hobbnetwork.managers.HookManager;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Formatter;
-import java.util.logging.LogRecord;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.io.File;
+import java.io.IOException;
+import java.util.logging.*;
 
 public class LogUtil {
   private final HookManager hookManager;
+  private final boolean logToFile;
+
   public LogUtil(HookManager hookManager) {
     this.hookManager = hookManager;
+    this.logToFile = hookManager.isLoggingToFile();
     setupLogger();
   }
   /**
@@ -21,15 +23,35 @@ public class LogUtil {
   private void setupLogger() {
     Logger logger = hookManager.isHooked() ? hookManager.getPlugin().getLogger() : Logger.getGlobal();
     // Remove existing handlers to avoid duplicate logging
-    for(var handler : logger.getHandlers()) {
+    for (Handler handler : logger.getHandlers()) {
       logger.removeHandler(handler);
     }
     logger.setUseParentHandlers(false);
-    ConsoleHandler handler = new ConsoleHandler();
-    handler.setLevel(Level.ALL);
-    handler.setFormatter(new ColorFormatter());
-    logger.addHandler(handler);
+    ConsoleHandler consoleHandler = new ConsoleHandler();
+    consoleHandler.setLevel(Level.ALL);
+    consoleHandler.setFormatter(new ColorFormatter());
+    logger.addHandler(consoleHandler);
+
+    if (logToFile) {
+      try {
+        FileHandler fileHandler = getFileHandler();
+        logger.addHandler(fileHandler);
+      } catch (IOException e) {
+        logger.log(Level.SEVERE, "Failed to initialize file handler for logging", e);
+      }
+    }
     logger.setLevel(Level.ALL);
+  }
+  private @NotNull FileHandler getFileHandler() throws IOException {
+    File logDir = new File(hookManager.getPlugin().getDataFolder(), "logs");
+    if (!logDir.exists() && !logDir.mkdirs()) {
+      throw new IllegalStateException("Failed to create log directory: " + logDir.getPath());
+    }
+    // Create a new log file every day and keep at most 10 previous logs
+    FileHandler fileHandler = new FileHandler(new File(logDir, "plugin-%g.log").getPath(), 0, 10, true);
+    fileHandler.setLevel(Level.ALL);
+    fileHandler.setFormatter(new SimpleFormatter());
+    return fileHandler;
   }
   /**
    * This method logs a message to the console using the plugin's logger if it is hooked
@@ -41,10 +63,13 @@ public class LogUtil {
   public void log(Level lvl, Object... message) {
     Logger logger = hookManager.getPlugin().getLogger();
     StringBuilder msg = new StringBuilder();
-    for(Object e : message) {
-      msg.append(e.toString()).append("\n");
+    Throwable throwable = null;
+    for (Object e : message) {
+      if (e instanceof Throwable) throwable = (Throwable) e;
+      else msg.append(e.toString()).append("\n");
     }
-    logger.log(lvl, msg.toString());
+    if (throwable != null) logger.log(lvl, msg.toString(), throwable);
+    else logger.log(lvl, msg.toString());
   }
 
   /**

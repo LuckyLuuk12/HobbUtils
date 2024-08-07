@@ -1,6 +1,7 @@
 package net.hobbnetwork.storage;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import net.hobbnetwork.managers.HookManager;
 import net.hobbnetwork.utils.LogUtil;
@@ -18,7 +19,6 @@ public class H2Storage extends Storage {
   private static final String USER = "sa";
   private static final String PASSWORD = "password";
   private Connection connection;
-  private final Gson gson = new Gson();
 
   public H2Storage(HookManager hookManager) {
     this.hookManager = hookManager;
@@ -28,7 +28,7 @@ public class H2Storage extends Storage {
       connection = DriverManager.getConnection(jdbcUrl, USER, PASSWORD);
       String couldInit = init("hobb-storage").get() ? "Successfully initialized" : "Could not Initialize";
       hookManager.log(LogUtil.LogLevel.DEBUG, "[H2Storage] " + couldInit + " H2 storage!");
-    } catch (ClassNotFoundException | SQLException | IllegalStateException | InterruptedException | ExecutionException e) {
+    } catch (Exception e) {
       hookManager.log(LogUtil.LogLevel.CRASH, "[H2Storage] Initializing the H2 Database failed!", e);
     }
   }
@@ -50,15 +50,18 @@ public class H2Storage extends Storage {
   @Override
   public CompletableFuture<Boolean> setValue(@NotNull TypedKeyValue<?> tkv, @Nullable Object value) {
     return CompletableFuture.supplyAsync(() -> {
+      Gson dynamicGson = new GsonBuilder()
+        .registerTypeAdapter(tkv.getType(), new GSONTypeAdapter<>(tkv.getType()))
+        .create();
       String insertSQL = value == null
         ? "DELETE FROM `key_value` WHERE `key` = ?;"
         : "MERGE INTO `key_value` (`key`, `value`) VALUES (?, ?);";
       try (PreparedStatement pstmt = connection.prepareStatement(insertSQL)) {
         pstmt.setString(1, tkv.getKey());
-        if (value != null) pstmt.setString(2, gson.toJson(value)); // Convert value to JSON
+        if (value != null) pstmt.setString(2, dynamicGson.toJson(value)); // Convert value to JSON
         return pstmt.executeUpdate() != 0;
-      } catch (SQLException e) {
-        hookManager.log(Level.SEVERE, "[H2Storage] Could not set value!", e);
+      } catch (Exception e) {
+        hookManager.log(Level.SEVERE, "[H2Storage] Could not set value!\n" + e);
         return false;
       }
     });
@@ -67,13 +70,16 @@ public class H2Storage extends Storage {
   @Override
   public CompletableFuture<Object> getValue(@NotNull TypedKeyValue<?> tkv) {
     return CompletableFuture.supplyAsync(() -> {
+      Gson dynamicGson = new GsonBuilder()
+        .registerTypeAdapter(tkv.getType(), new GSONTypeAdapter<>(tkv.getType()))
+        .create();
       String selectSQL = "SELECT `value` FROM `key_value` WHERE `key` = ?;";
       try (PreparedStatement pstmt = connection.prepareStatement(selectSQL)) {
         pstmt.setString(1, tkv.getKey());
         ResultSet rs = pstmt.executeQuery();
-        if (rs.next()) return gson.fromJson(rs.getString("value"), tkv.getType()); // Convert JSON to value
-      } catch (SQLException | JsonSyntaxException e) {
-        hookManager.log(Level.SEVERE, "[H2Storage] Could not get value!", e);
+        return rs.next() ? dynamicGson.fromJson(rs.getString("value"), tkv.getType()) : null;
+      } catch (Exception e) {
+        hookManager.log(Level.SEVERE, "[H2Storage] Could not get value!\n" + e);
       }
       return null;
     });
