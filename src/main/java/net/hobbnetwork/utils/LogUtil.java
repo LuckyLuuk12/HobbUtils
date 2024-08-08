@@ -65,7 +65,7 @@ public class LogUtil {
     StringBuilder msg = new StringBuilder();
     Throwable throwable = null;
     for (Object e : message) {
-      if (e instanceof Throwable) throwable = (Throwable) e;
+      if (e instanceof Throwable t) throwable = t;
       else msg.append(e.toString()).append("\n");
     }
     if (throwable != null) logger.log(lvl, msg.toString(), throwable);

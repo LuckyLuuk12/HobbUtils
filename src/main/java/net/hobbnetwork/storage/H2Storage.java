@@ -1,8 +1,5 @@
 package net.hobbnetwork.storage;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonSyntaxException;
 import net.hobbnetwork.managers.HookManager;
 import net.hobbnetwork.utils.LogUtil;
 import org.jetbrains.annotations.NotNull;
@@ -11,7 +8,6 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.sql.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 
 public class H2Storage extends Storage {
@@ -50,15 +46,12 @@ public class H2Storage extends Storage {
   @Override
   public CompletableFuture<Boolean> setValue(@NotNull TypedKeyValue<?> tkv, @Nullable Object value) {
     return CompletableFuture.supplyAsync(() -> {
-      Gson dynamicGson = new GsonBuilder()
-        .registerTypeAdapter(tkv.getType(), new GSONTypeAdapter<>(tkv.getType()))
-        .create();
       String insertSQL = value == null
         ? "DELETE FROM `key_value` WHERE `key` = ?;"
         : "MERGE INTO `key_value` (`key`, `value`) VALUES (?, ?);";
       try (PreparedStatement pstmt = connection.prepareStatement(insertSQL)) {
         pstmt.setString(1, tkv.getKey());
-        if (value != null) pstmt.setString(2, dynamicGson.toJson(value)); // Convert value to JSON
+        if(value != null) pstmt.setObject(2, value, Types.JAVA_OBJECT);
         return pstmt.executeUpdate() != 0;
       } catch (Exception e) {
         hookManager.log(Level.SEVERE, "[H2Storage] Could not set value!\n" + e);
@@ -70,18 +63,17 @@ public class H2Storage extends Storage {
   @Override
   public CompletableFuture<Object> getValue(@NotNull TypedKeyValue<?> tkv) {
     return CompletableFuture.supplyAsync(() -> {
-      Gson dynamicGson = new GsonBuilder()
-        .registerTypeAdapter(tkv.getType(), new GSONTypeAdapter<>(tkv.getType()))
-        .create();
       String selectSQL = "SELECT `value` FROM `key_value` WHERE `key` = ?;";
       try (PreparedStatement pstmt = connection.prepareStatement(selectSQL)) {
         pstmt.setString(1, tkv.getKey());
         ResultSet rs = pstmt.executeQuery();
-        return rs.next() ? dynamicGson.fromJson(rs.getString("value"), tkv.getType()) : null;
+        if(!rs.next()) return null;
+        // try casting to Storable and use the readFrom method, catch using the dynamicGson:
+        return tkv.getType().cast(rs.getObject("value", Object.class)); // Convert using casting
       } catch (Exception e) {
         hookManager.log(Level.SEVERE, "[H2Storage] Could not get value!\n" + e);
+        return null;
       }
-      return null;
     });
   }
 
@@ -104,7 +96,7 @@ public class H2Storage extends Storage {
 
   public CompletableFuture<Boolean> createTable(String tableName) {
     return CompletableFuture.supplyAsync(() -> {
-      String createSQL = "CREATE TABLE IF NOT EXISTS `key_value` (`key` VARCHAR(255) NOT NULL PRIMARY KEY, `value` CLOB NOT NULL);";
+      String createSQL = "CREATE TABLE IF NOT EXISTS `key_value` (`key` VARCHAR(255) NOT NULL PRIMARY KEY, `value` JAVA_OBJECT NOT NULL);";
       try(Statement stmt = connection.createStatement()) {
         boolean suc = !stmt.execute(createSQL);
         int rows = stmt.getUpdateCount();
