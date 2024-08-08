@@ -6,3 +6,9 @@ prefix: Hobb-Utils
 authors: [ LuckyLuuk_ ]
 website: https://site.hobbnetwork.net
 description: The Hobb Network utility plugin to simplify the other plugins
+commands:
+  test:
+    aliases: [ test, hobb-utils ]
+    description: Test command
+    usage: /<command>
+    permission-message: You require <permission> to use this command!

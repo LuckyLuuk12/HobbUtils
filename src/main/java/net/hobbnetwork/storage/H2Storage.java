@@ -22,7 +22,7 @@ public class H2Storage extends Storage {
       String jdbcUrl = getH2URL(hookManager);
       Class.forName("org.h2.Driver");
       connection = DriverManager.getConnection(jdbcUrl, USER, PASSWORD);
-      String couldInit = init("hobb-storage").get() ? "Successfully initialized" : "Could not Initialize";
+      String couldInit = init("hobb-storage").join() ? "Successfully initialized" : "Could not Initialize";
       hookManager.log(LogUtil.LogLevel.DEBUG, "[H2Storage] " + couldInit + " H2 storage!");
     } catch (Exception e) {
       hookManager.log(LogUtil.LogLevel.CRASH, "[H2Storage] Initializing the H2 Database failed!", e);
@@ -54,7 +54,7 @@ public class H2Storage extends Storage {
         if(value != null) pstmt.setObject(2, value, Types.JAVA_OBJECT);
         return pstmt.executeUpdate() != 0;
       } catch (Exception e) {
-        hookManager.log(Level.SEVERE, "[H2Storage] Could not set value!\n" + e);
+        hookManager.log(Level.SEVERE, "[H2Storage] Could not set value!\n", e);
         return false;
       }
     });
@@ -71,7 +71,7 @@ public class H2Storage extends Storage {
         // try casting to Storable and use the readFrom method, catch using the dynamicGson:
         return tkv.getType().cast(rs.getObject("value", Object.class)); // Convert using casting
       } catch (Exception e) {
-        hookManager.log(Level.SEVERE, "[H2Storage] Could not get value!\n" + e);
+        hookManager.log(Level.SEVERE, "[H2Storage] Could not get value!\n", e);
         return null;
       }
     });
@@ -104,7 +104,7 @@ public class H2Storage extends Storage {
         if(rows == 0) hookManager.log(Level.FINEST, "[H2Storage] `key_value` table was found!");
         return suc;
       } catch(SQLException e) {
-        hookManager.log(LogUtil.LogLevel.CRASH, "[H2Storage] Could not create table `" + tableName + "` "+e.getMessage());
+        hookManager.log(LogUtil.LogLevel.CRASH, "[H2Storage] Could not create table `" + tableName + "` ", e);
         return false;
       }
     });

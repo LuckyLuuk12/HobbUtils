@@ -152,10 +152,10 @@ public class HobbCommand implements TabExecutor {
    * @param prefix The prefix used in the help message.
    */
   protected void sendHelpMessage(CommandSender sender, String label, String prefix) {
-    sender.sendMessage((prefix.isEmpty() ? "" : prefix + " ")  + "§6" + label.replaceFirst(String.valueOf(label.charAt(0)),String.valueOf(label.charAt(0)).toUpperCase()) + " help");
+    sender.sendMessage((prefix.isEmpty() ? "" : prefix + " ")  + "§5" + label.replaceFirst(String.valueOf(label.charAt(0)),String.valueOf(label.charAt(0)).toUpperCase()) + " Help");
     sender.sendMessage("");
     for (HobbCommand subCommand : subCommands) {
-      if (subCommand.permission == null || sender.hasPermission(subCommand.permission)) sender.sendMessage("§7 - §f/" + label + " " + subCommand.name + "§7: " + subCommand.description);
+      if (subCommand.permission == null || sender.hasPermission(subCommand.permission)) sender.sendMessage("§7  - §d/" + label + " " + subCommand.name + "§f: " + subCommand.description);
     }
     sender.sendMessage("");
   }
@@ -169,17 +169,19 @@ public class HobbCommand implements TabExecutor {
   public void register(HookManager hookManager, boolean... deep) throws NullPointerException {
     boolean deep1 = deep.length > 0 && deep[0];
     PluginCommand command = Bukkit.getPluginCommand(name);
-    if(command == null) throw new NullPointerException("Command " + name + " is not registered in the plugin.yml");
+    if(command == null) throw new NullPointerException("Command `" + name + "` is not registered in the plugin.yml");
     if(canRegister) command.setExecutor(this);
     if(canRegister) command.setTabCompleter(this);
     if(!deep1) return;
-    try {
+
       for(HobbCommand subCommand : subCommands) {
-        subCommand.register(hookManager, true);
+        try {
+          subCommand.register(hookManager, true);
+        } catch (Exception e) {
+          hookManager.log(Level.SEVERE, "Could not register subcommands of `" + name+"`", "Namely, `"+subCommand.name+"`", "Use this register method on an HobbCommand instance instead!");
+        }
       }
-    } catch (Exception e) {
-      hookManager.log(Level.SEVERE, "Could not register subcommands for " + name, "Use this register method on an HobbCommand instance instead!");
-    }
+
   }
 
   /**

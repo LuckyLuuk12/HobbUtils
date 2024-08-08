@@ -14,102 +14,108 @@ import org.bukkit.inventory.ItemStack;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-/**
- * A utility class for creating GUIs
- */
 public class GUIUtils implements Listener {
   private final HookManager hookManager;
-  private final HashMap<Inventory, HobbGUI> guiMap = new HashMap<>();
+  private static final HashMap<Inventory, GUIUtils> guiMap = new HashMap<>();
+  private Inventory inventory;
+  private final InventoryType type;
+  private final Component title;
+  private final Integer size;
+  private final ArrayList<Boolean> isEditable;
+  private final ArrayList<ClickCallback> callbacks;
+
   /**
-   * Creates a new GUIUtils object and registers it as a listener
+   * This constructor is used to create a GUIUtils object with a title that is a Component object.
+   * @param hookManager The HookManager object to use
+   * @param type The InventoryType of the GUI
+   * @param title The title of the GUI
+   * @param size The size of the GUI
    */
-  public GUIUtils(HookManager hookManager) {
+  public GUIUtils(HookManager hookManager, InventoryType type, Component title, Integer size) {
     this.hookManager = hookManager;
-    if(hookManager.isHooked()) Bukkit.getPluginManager().registerEvents(this, hookManager.getPlugin());
+    this.type = type;
+    this.title = title;
+    this.size = size;
+    this.isEditable = new ArrayList<>(size);
+    this.callbacks = new ArrayList<>(size);
+    init();
   }
 
   /**
-   * A class representing a GUI, thus containing all the necessary information to create a GUI
+   * This constructor is used to create a GUIUtils object with a title that is a string.
+   * This string will be parsed into a Component object, using {@link TextUtil#parseMcString(String)}.
+   * @param hookManager The HookManager object to use
+   * @param type The InventoryType of the GUI
+   * @param title The title of the GUI
+   * @param size The size of the GUI
    */
-  public class HobbGUI {
-    private Inventory inventory;
-    private final InventoryType type;
-    private final Component title;
-    private final Integer size;
-    private final ArrayList<Boolean> isEditable;
-    private final ArrayList<ClickCallback> callbacks;
-
-    /**
-     * Creates a new HobbGUI object
-     * @param type The {@link InventoryType type} of the inventory
-     * @param title The title of the inventory
-     * @param size The size of the inventory (if applicable), otherwise you <b>MUST</b> provide null
-     */
-    public HobbGUI(InventoryType type, Component title, Integer size) {
-      this.type = type;
-      this.title = title;
-      this.size = size;
-      this.isEditable = new ArrayList<>(size);
-      this.callbacks = new ArrayList<>(size);
-      for (int i = 0; i < size; i++) {
-        this.isEditable.add(false);
-        this.callbacks.add(null);
-      }
-    }
-
-    /**
-     * This method sets the item in a specific slot
-     * @param slot The slot to set the item in
-     * @param item The item to set
-     * @param isEditable Whether the item is editable, if not provided, it will default to false.
-     *                   Meaning that a player cannot do anything with the item besides activating the callback
-     * @param callback The callback to call when the item is clicked
-     */
-    public void setItem(int slot, ItemStack item, boolean isEditable, ClickCallback callback) {
-      if (size != null && slot >= size) return;
-      inventory = inventory == null ? Bukkit.createInventory(null, type, title) : inventory;
-      inventory.setItem(slot, item);
-      this.isEditable.set(slot, isEditable);
-      this.callbacks.set(slot, callback);
-      guiMap.put(inventory, this);
-    }
-
-    /**
-     * This method opens the inventory for the player
-     * @param player The player to open the inventory for
-     */
-    public void open(Player player) {
-      player.openInventory(this.inventory);
-    }
-    /**
-     * This method gets the callback for a specific slot
-     * @param slot The slot to get the callback for
-     * @return The callback for the slot
-     */
-    public ClickCallback getCallback(int slot) {
-      return this.callbacks.get(slot);
-    }
+  public GUIUtils(HookManager hookManager, InventoryType type, String title, Integer size) {
+    this(hookManager, type, TextUtil.parseMcString(title), size);
   }
-
-  @FunctionalInterface
-  public interface ClickCallback {
-    void onClick(InventoryClickEvent e);
-  }
-
   /**
-   * This method listens for inventory clicks and calls the appropriate callback
-   * @param event The event to listen for
+   * This method ensures that the isEditable and callbacks ArrayLists are initialized.
+   * It also registers the GUIUtils object as a listener if the HookManager is hooked.
+   */
+  private void init() {
+    for (int i = 0; i < size; i++) {
+      this.isEditable.add(false);
+      this.callbacks.add(null);
+    }
+    if (hookManager.isHooked()) {
+      Bukkit.getPluginManager().registerEvents(this, hookManager.getPlugin());
+    }
+  }
+  /**
+   * This method sets the item in the GUI at the specified slot.
+   * @param slot The slot to set the item in
+   * @param item The ItemStack to set
+   * @param isEditable Whether the item is editable
+   * @param callback The ClickCallback to use
+   */
+  public void setItem(int slot, ItemStack item, boolean isEditable, ClickCallback callback) {
+    if (size != null && slot >= size) return;
+    inventory = inventory == null ? Bukkit.createInventory(null, type, title) : inventory;
+    inventory.setItem(slot, item);
+    this.isEditable.set(slot, isEditable);
+    this.callbacks.set(slot, callback);
+    guiMap.put(inventory, this);
+  }
+  /**
+   * This method opens the GUI for the specified player.
+   * @param player The player to open the GUI for
+   */
+  public void open(Player player) {
+    player.openInventory(this.inventory);
+  }
+  /**
+   * This method returns the ClickCallback for the specified slot.
+   * @param slot The slot to get the ClickCallback for
+   * @return The ClickCallback for the specified slot
+   */
+  public ClickCallback getCallback(int slot) {
+    return this.callbacks.get(slot);
+  }
+  /**
+   * This method is used to handle InventoryClickEvents.
+   * @param event The InventoryClickEvent to handle
    */
   @EventHandler
   public void onInventoryClick(InventoryClickEvent event) {
     Inventory inventory = event.getInventory();
     if (!guiMap.containsKey(inventory)) return;
-    HobbGUI gui = guiMap.get(inventory);
+    GUIUtils gui = guiMap.get(inventory);
     int slot = event.getRawSlot();
     if (slot >= gui.size) return;
     ClickCallback callback = gui.getCallback(slot);
     event.setCancelled(gui.isEditable.get(slot) == null || !gui.isEditable.get(slot));
     if (callback == null) return;
     callback.onClick(event);
+  }
+  /**
+   * This interface is used to handle InventoryClickEvents.
+   */
+  @FunctionalInterface
+  public interface ClickCallback {
+    void onClick(InventoryClickEvent e);
   }
 }

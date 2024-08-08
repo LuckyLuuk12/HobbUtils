@@ -2,6 +2,7 @@ package net.hobbnetwork;
 
 import lombok.Getter;
 import net.hobbnetwork.managers.HookManager;
+import net.hobbnetwork.testing.TestCommand;
 import org.bukkit.Server;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -15,6 +16,8 @@ public final class HobbUtils extends JavaPlugin {
   private static Server host;
   @Getter
   private static Logger console;
+  @Getter
+  private static HookManager hookManager;
 
 
   @Override
@@ -22,8 +25,9 @@ public final class HobbUtils extends JavaPlugin {
     thisPlugin = this;
     host = thisPlugin.getServer();
     console = thisPlugin.getLogger();
-    HookManager hookManager = new HookManager(thisPlugin, "true", "00bc8a");
+    hookManager = new HookManager(thisPlugin, "true", "00bc8a");
     hookManager.log(Level.INFO, "Enabled..");
+    new TestCommand().register(hookManager, true); // Just try out the deep feature (:
   }
 
   @Override
