@@ -131,9 +131,9 @@ public class LogUtil {
       String color = (LogLevel.translate(record.getLevel())).getColor();
       String pluginName = hookManager.getPlugin().getName();
       String pluginColor = String.format("\u001B[38;2;%s;%s;%sm",
-        Integer.valueOf(hookManager.getPrefixHex().substring(0, 2), 16),
-        Integer.valueOf(hookManager.getPrefixHex().substring(2, 4), 16),
-        Integer.valueOf(hookManager.getPrefixHex().substring(4, 6), 16)
+        Integer.valueOf(hookManager.getPrefixHex().replace("#", "").substring(0, 2), 16),
+        Integer.valueOf(hookManager.getPrefixHex().replace("#", "").substring(2, 4), 16),
+        Integer.valueOf(hookManager.getPrefixHex().replace("#", "").substring(4, 6), 16)
       );
       String resetColor = "\u001B[0m";
       String[] lines = formatMessage(record).split("\n");
@@ -146,6 +146,14 @@ public class LogUtil {
           Integer.valueOf(color.substring(4, 6), 16),
           line, resetColor));
       }
+      if(record.getThrown() == null) return formattedMessage.toString();
+      // Add a colored Throwable if present
+      formattedMessage.append(String.format("%s[%s]%s \u001B[38;2;%s;%s;%sm%s%s\n",
+        pluginColor, pluginName, resetColor,
+        Integer.valueOf(color.substring(0, 2), 16),
+        Integer.valueOf(color.substring(2, 4), 16),
+        Integer.valueOf(color.substring(4, 6), 16),
+        record.getThrown(), resetColor));
       return formattedMessage.toString();
     }
   }

@@ -44,6 +44,7 @@ public class TestCommand extends HobbCommand {
     public void executes(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
       // Initialize the database
       storage = new HobbStorage(HobbUtils.getHookManager(), HobbStorage.StorageType.H2);
+      sender.sendMessage("Database initialized! You can now store and load custom classes using /test store-custom-class and /test load-custom-class");
       HobbUtils.getConsole().log(LogUtil.LogLevel.TEST, "Database initialized by test command!");
     }
   }

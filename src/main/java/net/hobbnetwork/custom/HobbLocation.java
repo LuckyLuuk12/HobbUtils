@@ -11,6 +11,10 @@ import java.io.*;
 public class HobbLocation extends Location implements Serializable {
   private final HobbWorld world;
 
+  public HobbLocation() {
+    super(null, 0, 0, 0);
+    this.world = new HobbWorld(null);
+  }
   public HobbLocation(World world, double x, double y, double z, float yaw, float pitch) {
     super(world, x, y, z, yaw, pitch);
     this.world = new HobbWorld(world);

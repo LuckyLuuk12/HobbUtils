@@ -27,7 +27,7 @@ public class HookManager {
     this.plugin = plugin;
     this.hooked = true;
     this.debug = options.length > 0 && options[0].equals("true");
-    this.prefixHex = options.length > 1 && options[1].length() == 6 ? options[1] : "#00fdff";
+    this.prefixHex = options.length > 1 && options[1].length() >= 6 ? options[1] : "#00fdff";
     this.loggingToFile = options.length > 2 && options[2].equals("true");
     new Safeguards(this.plugin);
   }

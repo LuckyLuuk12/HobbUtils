@@ -54,7 +54,7 @@ public class H2Storage extends Storage {
         if(value != null) pstmt.setObject(2, value, Types.JAVA_OBJECT);
         return pstmt.executeUpdate() != 0;
       } catch (Exception e) {
-        hookManager.log(Level.SEVERE, "[H2Storage] Could not set value!\n", e);
+        hookManager.log(Level.SEVERE, "[H2Storage] Could not set value!\t"+tkv.getKey()+"\n", e);
         return false;
       }
     });
@@ -71,7 +71,7 @@ public class H2Storage extends Storage {
         // try casting to Storable and use the readFrom method, catch using the dynamicGson:
         return tkv.getType().cast(rs.getObject("value", Object.class)); // Convert using casting
       } catch (Exception e) {
-        hookManager.log(Level.SEVERE, "[H2Storage] Could not get value!\n", e);
+        hookManager.log(Level.SEVERE, "[H2Storage] Could not get value!\t"+tkv.getKey()+"\n", e);
         return null;
       }
     });

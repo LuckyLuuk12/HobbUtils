@@ -173,15 +173,19 @@ public class HobbCommand implements TabExecutor {
     if(canRegister) command.setExecutor(this);
     if(canRegister) command.setTabCompleter(this);
     if(!deep1) return;
-
-      for(HobbCommand subCommand : subCommands) {
-        try {
-          subCommand.register(hookManager, true);
-        } catch (Exception e) {
-          hookManager.log(Level.SEVERE, "Could not register subcommands of `" + name+"`", "Namely, `"+subCommand.name+"`", "Use this register method on an HobbCommand instance instead!");
-        }
+    ArrayList<String> failed = new ArrayList<>();
+    for(HobbCommand subCommand : subCommands) {
+      try {
+        subCommand.register(hookManager, true);
+      } catch (Exception e) {
+        failed.add(subCommand.name);
       }
-
+    }
+    if(!failed.isEmpty()) hookManager.log(
+      Level.SEVERE,
+      "Could not register subcommand(s) of `" + name+"`", "Namely, "+failed,
+      "Use this register method on an HobbCommand instance instead!"
+    );
   }
 
   /**
