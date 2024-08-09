@@ -346,4 +346,14 @@ public class TextUtil {
     };
     return result.decorate(TextDecoration.BOLD);
   }
+
+  /**
+   * Formats a time in milliseconds to a string
+   * @param time Time in milliseconds, could use {@link System#currentTimeMillis()} to get this
+   * @param format Format to use, e.g. "yyyy-MM-dd.HH:mm"
+   * @return Formatted time string
+   */
+  static public String formatDate(long time, String format) {
+    return new java.text.SimpleDateFormat(format).format(new java.util.Date(time));
+  }
 }

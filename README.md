@@ -43,7 +43,7 @@ public final class YourPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
       // HookManager(this, "debug", "prefix-hex", "log-to-file");
-      this.hookManager = new HookManager(this, "false", "a2b2c3", "false");
+      hookManager = new HookManager(this, "false", "a2b2c3", "false");
       // The rest of your plugin's initialization code
     }
     // The rest of your plugin's code

@@ -13,6 +13,7 @@ import java.util.logging.Level;
  */
 @Getter
 public class HobbStorage {
+  private boolean useInMemory = true;
   private final HashMap<TypedKeyValue<?>, Object> data = new HashMap<>();
   private final HookManager hookManager;
   private Storage storage;
@@ -24,8 +25,9 @@ public class HobbStorage {
    * It will fall back to YML if the type is not supported or if it cannot initialize
    * @param type The {@link StorageType type} of storage to use
    * @param options The options to use for the storage <br>
-   *                index 0: The name of the table/yml file
-   *                index 1: The path to the file (if needed)
+   *                index 0: The name of the table/yml file<br>
+   *                index 1: The path to the file (if needed)<br>
+   *                index 2: "true" disables the in-memory storage (this is slower)<br>
    */
   public HobbStorage(HookManager hookManager, StorageType type, String... options) {
     this.hookManager = hookManager;
@@ -35,6 +37,7 @@ public class HobbStorage {
     }
     this.name = options.length > 0 ? options[0] : "hobb-storage";
     this.path = options.length > 1 ? options[1] : null;
+    this.useInMemory = options.length > 2 && options[2].equalsIgnoreCase("true");
     if(type == StorageType.H2) {
       storage = new H2Storage(hookManager);
     } else if(type == StorageType.YML) {
@@ -72,7 +75,9 @@ public class HobbStorage {
    * @return The value of the key
    */
   public CompletableFuture<Object> getValue(TypedKeyValue<?> tkv) {
-    return data.containsKey(tkv) ? CompletableFuture.completedFuture(data.get(tkv)) : storage.getValue(tkv);
+    return isUseInMemory() && data.containsKey(tkv)
+      ? CompletableFuture.completedFuture(data.get(tkv))
+      : storage.getValue(tkv);
   }
   /**
    * This method sets the value of a key, as well as updating the storage
@@ -80,7 +85,7 @@ public class HobbStorage {
    * @param value The value to set
    */
   public CompletableFuture<Boolean> setValue(TypedKeyValue<?> tkv, Object value) {
-    data.put(tkv, value);
+    if(isUseInMemory()) data.put(tkv, value);
     return storage.setValue(tkv, value);
   }
 

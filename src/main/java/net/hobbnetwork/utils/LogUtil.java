@@ -6,6 +6,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.logging.*;
 
 public class LogUtil {
@@ -70,6 +72,13 @@ public class LogUtil {
     }
     if (throwable != null) logger.log(lvl, msg.toString(), throwable);
     else logger.log(lvl, msg.toString());
+  }
+
+  private static String getStackTrace(Throwable t) {
+    StringWriter sw = new StringWriter();
+    PrintWriter pw = new PrintWriter(sw, true);
+    t.printStackTrace(pw);
+    return sw.getBuffer().toString();
   }
 
   /**
@@ -153,7 +162,7 @@ public class LogUtil {
         Integer.valueOf(color.substring(0, 2), 16),
         Integer.valueOf(color.substring(2, 4), 16),
         Integer.valueOf(color.substring(4, 6), 16),
-        record.getThrown(), resetColor));
+        hookManager.isDebug() ? getStackTrace(record.getThrown()) : record.getThrown(), resetColor));
       return formattedMessage.toString();
     }
   }

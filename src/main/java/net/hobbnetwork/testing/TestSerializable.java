@@ -33,4 +33,19 @@ public class TestSerializable implements Serializable {
   private ArrayList<UUID> members = new ArrayList<>();
   private HashMap<String, HobbLocation> warps = new HashMap<>();
   private ArrayList<TestSerializable> children = new ArrayList<>();
+
+  @Override
+  public String toString() {
+    return "TestSerializable{" +
+      "id=" + id +
+      ", name='" + name + '\'' +
+      ", isTest=" + isTest +
+      ", world=" + world +
+      ", location=" + location +
+      ", owner=" + owner +
+      ", members=" + members +
+      ", warps=" + warps +
+      ", children=" + children +
+      '}';
+  }
 }

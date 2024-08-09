@@ -2,6 +2,8 @@ package net.hobbnetwork.testing;
 
 import net.hobbnetwork.HobbUtils;
 import net.hobbnetwork.commands.HobbCommand;
+import net.hobbnetwork.custom.HobbLocation;
+import net.hobbnetwork.custom.HobbWorld;
 import net.hobbnetwork.storage.HobbStorage;
 import net.hobbnetwork.storage.TypedKeyValue;
 import net.hobbnetwork.utils.GUIUtils;
@@ -21,7 +23,7 @@ import java.util.logging.Level;
 public class TestCommand extends HobbCommand {
   private HobbStorage storage;
   public TestCommand() {
-    this.subLevel = 1;
+    this.subLevel = 0;
     this.name = "test";
     this.description = "Test command";
     this.permission = "hobb.utils.test";
@@ -35,7 +37,7 @@ public class TestCommand extends HobbCommand {
 
   private class InitDB extends HobbCommand {
     public InitDB() {
-      this.subLevel = 2;
+      this.subLevel = 1;
       this.name = "init-db";
       this.description = "Initialize the database";
       this.permission = "hobb.utils.test.init-db";
@@ -50,7 +52,7 @@ public class TestCommand extends HobbCommand {
   }
   private class StoreCustomClass extends HobbCommand {
     public StoreCustomClass() {
-      this.subLevel = 2;
+      this.subLevel = 1;
       this.name = "store-custom-class";
       this.description = "Store a custom class";
       this.permission = "hobb.utils.test.store-custom-class";
@@ -64,8 +66,12 @@ public class TestCommand extends HobbCommand {
       }
       // Create an instance of TestSerializable and use setValue() to store it:
       TestSerializable test = new TestSerializable();
-      // Create a key using the current timestamp for easy lookup
-      String dateKey = "test_"+ System.currentTimeMillis();
+      // Change some values to test the serialization:
+      test.getWarps().put("spawn", new HobbLocation(HobbUtils.getHookManager().getPlugin().getServer().getWorlds().get(0), 1, 80, 2));
+      test.setWorld(new HobbWorld(HobbUtils.getHookManager().getPlugin().getServer().getWorlds().get(0)));
+
+      // Create a key like "test_2021-09-01.18:00" to store the object:
+      String dateKey = "test_"+ TextUtil.formatDate(System.currentTimeMillis(), "dd-MM-yyyy_HH:mm");
       TypedKeyValue<TestSerializable> testTKV = new TypedKeyValue<>(dateKey, TestSerializable.class, () -> test);
       storage.setValue(testTKV, test).thenAccept(success -> HobbUtils.getConsole().log(LogUtil.LogLevel.TEST, "TestSerializable Stored: "+success));
       sender.sendMessage("Stored TestSerializable with key: "+dateKey+" You can load it using /test load-custom-class "+dateKey);
@@ -73,7 +79,7 @@ public class TestCommand extends HobbCommand {
   }
   private class LoadCustomClass extends HobbCommand {
     public LoadCustomClass() {
-      this.subLevel = 2;
+      this.subLevel = 1;
       this.name = "load-custom-class";
       this.description = "Load a custom class";
       this.permission = "hobb.utils.test.load-custom-class";
@@ -97,7 +103,7 @@ public class TestCommand extends HobbCommand {
 
   private class Log extends HobbCommand {
     public Log() {
-      this.subLevel = 2;
+      this.subLevel = 1;
       this.name = "log";
       this.description = "Log a message";
       this.permission = "hobb.utils.test.log";
@@ -133,7 +139,7 @@ public class TestCommand extends HobbCommand {
 
   private class GUI extends HobbCommand {
     public GUI() {
-      this.subLevel = 2;
+      this.subLevel = 1;
       this.name = "gui";
       this.description = "Open a GUI";
       this.permission = "hobb.utils.test.gui";

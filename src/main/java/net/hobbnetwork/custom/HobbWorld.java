@@ -24,4 +24,11 @@ public class HobbWorld implements Serializable {
   private Object readResolve() throws ObjectStreamException {
     return getWorld();
   }
+
+  @Override
+  public String toString() {
+    return "HobbWorld{" +
+      "worldName='" + worldName + '\'' +
+      '}';
+  }
 }

@@ -27,6 +27,14 @@ public class HobbLocation extends Location implements Serializable {
     super(loc.getWorld(), loc.getX(), loc.getY(), loc.getZ(), loc.getYaw(), loc.getPitch());
     this.world = new HobbWorld(loc.getWorld());
   }
+  public HobbLocation(HobbWorld world, double x, double y, double z, float yaw, float pitch) {
+    super(world.getWorld(), x, y, z, yaw, pitch);
+    this.world = world;
+  }
+  public HobbLocation(HobbWorld world, double x, double y, double z) {
+    super(world.getWorld(), x, y, z);
+    this.world = world;
+  }
 
   @Serial
   private void writeObject(ObjectOutputStream out) throws IOException {
@@ -54,5 +62,17 @@ public class HobbLocation extends Location implements Serializable {
     setZ(z);
     setYaw(yaw);
     setPitch(pitch);
+  }
+
+  @Override
+  public String toString() {
+    return "HobbLocation{" +
+      "world=" + world +
+      ", x=" + getX() +
+      ", y=" + getY() +
+      ", z=" + getZ() +
+      ", yaw=" + getYaw() +
+      ", pitch=" + getPitch() +
+      '}';
   }
 }
