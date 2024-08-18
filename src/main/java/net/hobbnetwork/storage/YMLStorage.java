@@ -105,6 +105,13 @@ public class YMLStorage extends Storage {
     this.config.set(tkv.getKey(), null);
     return CompletableFuture.completedFuture(save());
   }
+  /**
+   * This method closes the configuration file by saving it
+   */
+  @Override
+  public void close() {
+    save();
+  }
 
 
   /**

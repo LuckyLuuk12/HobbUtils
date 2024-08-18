@@ -1,6 +1,7 @@
 package net.hobbnetwork.storage;
 
 import lombok.Getter;
+import net.hobbnetwork.listeners.Safeguards;
 import net.hobbnetwork.managers.HookManager;
 
 import java.util.ArrayList;
@@ -35,6 +36,7 @@ public class HobbStorage {
       hookManager.log(Level.SEVERE, "HobbStorage is not hooked!");
       return;
     }
+    new Safeguards(hookManager.getPlugin());
     this.name = options.length > 0 ? options[0] : "hobb-storage";
     this.path = options.length > 1 ? options[1] : null;
     this.useInMemory = options.length > 2 && options[2].equalsIgnoreCase("true");
@@ -89,6 +91,9 @@ public class HobbStorage {
     return storage.setValue(tkv, value);
   }
 
+  public void close() {
+    storage.close();
+  }
 
 
   public enum StorageType {

@@ -23,7 +23,7 @@ public class Safeguards implements Listener {
   public void preventServerReloadByPlayer(PlayerCommandPreprocessEvent e) {
     if(!e.getMessage().equalsIgnoreCase("reload confirm")) return;
     e.setCancelled(true);
-    e.getPlayer().sendMessage("§4Reloading breaks the server, don't even dare try this again!");
+    e.getPlayer().sendMessage("§4Reloading breaks the server, don't even dare trying this again!");
   }
   /**
    * This specific event handler prevents any <b>non-</b>{@link org.bukkit.entity.Player} from using /reload confirm
@@ -32,6 +32,6 @@ public class Safeguards implements Listener {
   public void preventServerReloadByConsole(ServerCommandEvent e) {
     if(!e.getCommand().equalsIgnoreCase("reload confirm")) return;
     e.setCancelled(true);
-    e.getSender().sendMessage("§4Reloading breaks the server, don't even dare try this again!");
+    e.getSender().sendMessage("§4Reloading breaks the server, don't even dare trying this again!");
   }
 }

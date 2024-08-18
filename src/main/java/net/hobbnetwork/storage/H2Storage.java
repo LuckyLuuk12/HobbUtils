@@ -90,6 +90,15 @@ public class H2Storage extends Storage {
     return setValue(tkv, null);
   }
 
+  @Override
+  public void close() {
+    try {
+      connection.close();
+    } catch (SQLException e) {
+      hookManager.log(Level.SEVERE, "[H2Storage] Could not close connection!", e);
+    }
+  }
+
   public CompletableFuture<Boolean> clear() {
     return CompletableFuture.supplyAsync(() -> {
       String deleteSQL = "TRUNCATE TABLE `key_value`;";

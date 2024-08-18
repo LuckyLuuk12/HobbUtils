@@ -56,6 +56,7 @@ public class TestCommand extends HobbCommand {
       this.name = "log";
       this.description = "Log a message";
       this.permission = "hobb.utils.test.log";
+      this.canRegister = true;
     }
     @Override
     public void executes(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {

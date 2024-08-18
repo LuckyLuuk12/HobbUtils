@@ -1,9 +1,7 @@
 package net.hobbnetwork.commands;
 
 import lombok.Getter;
-import lombok.Setter;
 import net.hobbnetwork.managers.HookManager;
-import org.bukkit.Bukkit;
 import org.bukkit.command.*;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.ApiStatus;
@@ -16,6 +14,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
+
+// TODO: Improve the implementation of nested registered commands such that the subcommands are registered to the server
+// i.e. currently `/test log` works, but `/log`, it requires `/log log` to work which makes no sense..
 
 /**
  * Most of this class is copied from the TippieUtils plugin by Tippie. The original source code can be found at
@@ -63,7 +64,7 @@ public class HobbCommand implements TabExecutor {
    */
   @Override @ApiStatus.Internal
   public final boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-    if (!hasPermission(sender, permission)) {
+    if (!sender.hasPermission(permission)) {
       sender.sendMessage("§cYou need `§4" + permission + "§c` to execute this command.");
       return true;
     }
@@ -126,7 +127,8 @@ public class HobbCommand implements TabExecutor {
    * @param sender The sender of the command.
    * @param command The command.
    * @param alias The alias of the command. This is the same as the {@link #name} of the command.
-   * @param args The arguments of the command. This does not include the subcommand.Example the command '/test subcommand argument' would only have 'argument' here
+   * @param args The arguments of the command. This does not include the subcommand.<br>
+   *             Example the command '/test subcommand argument' would only have 'argument' here
    * @return The list of completions
    */
   public List<String> completes(CommandSender sender, Command command, String alias, String[] args) {
@@ -166,12 +168,11 @@ public class HobbCommand implements TabExecutor {
    * @param hookManager The {@link HookManager} to use for registering the command.
    * @param deep Whether to register subcommands as well.
    */
-  public void register(HookManager hookManager, boolean... deep) throws NullPointerException {
+  public void register(HookManager hookManager, boolean... deep) throws RuntimeException {
     boolean deep1 = deep.length > 0 && deep[0];
-    PluginCommand command = Bukkit.getPluginCommand(name);
-    if(command == null) throw new NullPointerException("Command `" + name + "` is not registered in the plugin.yml");
-    if(canRegister) command.setExecutor(this);
-    if(canRegister) command.setTabCompleter(this);
+    if(!canRegister) return;
+    CommandRegistrar registrar = new CommandRegistrar(hookManager);
+    registrar.registerCommand(name, this);
     if(!deep1) return;
     ArrayList<String> failed = new ArrayList<>();
     for(HobbCommand subCommand : subCommands) {
@@ -186,29 +187,5 @@ public class HobbCommand implements TabExecutor {
       "Could not register subcommand(s) of `" + name+"`", "Namely, "+failed,
       "Use this register method on an HobbCommand instance instead!"
     );
-  }
-
-  /**
-   * This method checks if the sender has the permission to execute the command.
-   * It also checks for wildcard permissions.
-   * An example of a wildcard permission is 'hobb.*' which would allow the sender to execute any command with the 'hobb.' prefix.
-   * It also works "backwards" meaning that if the sender has 'hobb.command.other' they can execute 'hobb.command' as well.
-   * @param sender The sender of the command
-   * @param permission The permission to check for
-   * @return Whether the sender has the permission
-   */
-  private boolean hasPermission(CommandSender sender, String permission) {
-    if (permission == null) return true;
-    if(sender.isOp()) return true;
-    if (sender.hasPermission(permission)) return true;
-    if (permission.endsWith(".*")) {
-      String[] split = permission.split("\\.");
-      StringBuilder builder = new StringBuilder();
-      for (int i = 0; i < split.length - 1; i++) {
-        builder.append(split[i]).append(".");
-        if (sender.hasPermission(builder.toString())) return true;
-      }
-    }
-    return false;
   }
 }
