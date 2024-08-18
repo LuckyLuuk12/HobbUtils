@@ -2,19 +2,19 @@ package net.hobbnetwork.testing;
 
 import net.hobbnetwork.HobbUtils;
 import net.hobbnetwork.commands.HobbCommand;
-import net.hobbnetwork.custom.HobbLocation;
-import net.hobbnetwork.custom.HobbWorld;
 import net.hobbnetwork.storage.HobbStorage;
-import net.hobbnetwork.storage.TypedKeyValue;
 import net.hobbnetwork.utils.GUIUtils;
 import net.hobbnetwork.utils.ItemUtil;
 import net.hobbnetwork.utils.LogUtil;
 import net.hobbnetwork.utils.TextUtil;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.inventory.BlockInventoryHolder;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
@@ -29,10 +29,9 @@ public class TestCommand extends HobbCommand {
     this.permission = "hobb.utils.test";
     this.canRegister = true;
     this.getSubCommands().add(new InitDB());
-    this.getSubCommands().add(new StoreCustomClass());
-    this.getSubCommands().add(new LoadCustomClass());
     this.getSubCommands().add(new Log());
     this.getSubCommands().add(new GUI());
+    this.getSubCommands().add(new CheckSlotIndices());
   }
 
   private class InitDB extends HobbCommand {
@@ -48,56 +47,6 @@ public class TestCommand extends HobbCommand {
       storage = new HobbStorage(HobbUtils.getHookManager(), HobbStorage.StorageType.H2);
       sender.sendMessage("Database initialized! You can now store and load custom classes using /test store-custom-class and /test load-custom-class");
       HobbUtils.getConsole().log(LogUtil.LogLevel.TEST, "Database initialized by test command!");
-    }
-  }
-  private class StoreCustomClass extends HobbCommand {
-    public StoreCustomClass() {
-      this.subLevel = 1;
-      this.name = "store-custom-class";
-      this.description = "Store a custom class";
-      this.permission = "hobb.utils.test.store-custom-class";
-    }
-    @Override
-    public void executes(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-      // Store a custom class
-      if(storage == null) {
-        sender.sendMessage("Database not initialized yet! Try running /test init-db first.");
-        return;
-      }
-      // Create an instance of TestSerializable and use setValue() to store it:
-      TestSerializable test = new TestSerializable();
-      // Change some values to test the serialization:
-      test.getWarps().put("spawn", new HobbLocation(HobbUtils.getHookManager().getPlugin().getServer().getWorlds().get(0), 1, 80, 2));
-      test.setWorld(new HobbWorld(HobbUtils.getHookManager().getPlugin().getServer().getWorlds().get(0)));
-
-      // Create a key like "test_2021-09-01.18:00" to store the object:
-      String dateKey = "test_"+ TextUtil.formatDate(System.currentTimeMillis(), "dd-MM-yyyy_HH:mm");
-      TypedKeyValue<TestSerializable> testTKV = new TypedKeyValue<>(dateKey, TestSerializable.class, () -> test);
-      storage.setValue(testTKV, test).thenAccept(success -> HobbUtils.getConsole().log(LogUtil.LogLevel.TEST, "TestSerializable Stored: "+success));
-      sender.sendMessage("Stored TestSerializable with key: "+dateKey+" You can load it using /test load-custom-class "+dateKey);
-    }
-  }
-  private class LoadCustomClass extends HobbCommand {
-    public LoadCustomClass() {
-      this.subLevel = 1;
-      this.name = "load-custom-class";
-      this.description = "Load a custom class";
-      this.permission = "hobb.utils.test.load-custom-class";
-    }
-    @Override
-    public void executes(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-      // Load a custom class
-      if(storage == null) {
-        sender.sendMessage("Database not initialized yet! Try running /test init-db first.");
-        return;
-      }
-      if(args.length == 0) {
-        sender.sendMessage("You must provide a key to load the custom class!");
-        return;
-      }
-      // Create an instance of TestSerializable and use getValue() to load it:
-      TypedKeyValue<TestSerializable> testTKV = new TypedKeyValue<>(args[0], TestSerializable.class, () -> new TestSerializable());
-      storage.getValue(testTKV).thenAccept(value -> HobbUtils.getConsole().log(LogUtil.LogLevel.TEST, "TestSerializable Loaded: "+value));
     }
   }
 
@@ -166,6 +115,29 @@ public class TestCommand extends HobbCommand {
         HobbUtils.getConsole().log(LogUtil.LogLevel.TEST, "Manually cancelled: "+clickEvent.isCancelled());
       });
       gui.open(p);
+    }
+  }
+
+  private class CheckSlotIndices extends HobbCommand {
+    public CheckSlotIndices() {
+      this.subLevel = 1;
+      this.name = "check-slot-indices";
+      this.description = "Fills you or the inventory holder you're looking at with named items representing to slot index";
+      this.permission = "hobb.utils.test.check-slot-indices";
+    }
+    @Override
+    public void executes(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
+      // Check slot indices
+      if(!(sender instanceof Player p)) {
+        sender.sendMessage("You must be a player to use this command!");
+        return;
+      }
+      Block block = p.getTargetBlock(null, 5);
+      InventoryHolder ih = (block instanceof BlockInventoryHolder bih) ? bih : p;
+      for(int i = 0; i < ih.getInventory().getSize(); i++) {
+        ItemStack item = ItemUtil.getItemStack(Material.PAPER, i+"");
+        ih.getInventory().setItem(i, item);
+      }
     }
   }
 }

@@ -1,6 +1,5 @@
 package net.hobbnetwork.utils;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 
 import org.jetbrains.annotations.Nullable;
@@ -67,11 +66,5 @@ public class LocationUtil {
    * @param s String to convert
    * @return Location or null if the string is not a location
    */
-  @Nullable static public Location getLocFromString(@Nullable String s) {
-    if(s == null || !s.startsWith("Location{")) return null;
-    String[] fields = s.substring(9, s.length()-1).split(",");
-    if(fields.length == 4) return new Location(Bukkit.getWorld(fields[0].substring(fields[0].lastIndexOf("=")+1, fields[0].length()-1)), Double.parseDouble(fields[1].substring(fields[1].lastIndexOf("=")+1)), Double.parseDouble(fields[2].substring(fields[2].lastIndexOf("=")+1)), Double.parseDouble(fields[3].substring(fields[3].lastIndexOf("=")+1)));
-    if(fields.length == 6) return new Location(Bukkit.getWorld(fields[0].substring(fields[0].lastIndexOf("=")+1, fields[0].length()-1)), Double.parseDouble(fields[1].substring(fields[1].lastIndexOf("=")+1)), Double.parseDouble(fields[2].substring(fields[2].lastIndexOf("=")+1)), Double.parseDouble(fields[3].substring(fields[3].lastIndexOf("=")+1)), Float.parseFloat(fields[4].substring(fields[4].lastIndexOf("=")+1)), Float.parseFloat(fields[5].substring(fields[5].lastIndexOf("=")+1)));
-    return null;
-  }
+
 }

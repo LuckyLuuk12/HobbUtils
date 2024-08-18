@@ -1,5 +1,6 @@
 package net.hobbnetwork.utils;
 
+import net.hobbnetwork.custom.Triple;
 import net.hobbnetwork.managers.HookManager;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -143,15 +144,17 @@ public class MechanicsUtil {
    * @param pi The player inventory to check
    * @param is The item stack to check for
    * @param amount The amount to check for
+   * @param checkBundles Whether to check for (nested in shulker boxes) bundles as well
    * @return True if the inventory contains the item stack with the amount
    */
-  static public boolean inventoryContainsItemStack(@Nullable PlayerInventory pi, @Nullable  ItemStack is, int amount) {
+  static public boolean inventoryContainsItemStack(@Nullable PlayerInventory pi, @Nullable  ItemStack is, int amount, boolean... checkBundles) {
     if(pi == null || is == null) return false;
+    boolean checkBundlesFlag = checkBundles.length > 0 && checkBundles[0];
     for(ItemStack item : pi) {
       if(item == null) continue;
       if(item.getType().equals(is.getType()) && item.getAmount() >= amount
         || shulkerContainsItemStack(item, is, amount)
-        || bundleContainsItemStack(item, is, amount)) return true;
+        || (checkBundlesFlag && bundleContainsItemStack(item, is, amount))) return true;
     }
     return false;
   }
@@ -176,17 +179,19 @@ public class MechanicsUtil {
    * @param possibleShulker The shulker to check
    * @param is The item stack to check for
    * @param amount The amount to check for
+   * @param checkBundles Whether to check for bundles as well
    * @return True if the shulker contains the item stack with the amount
    */
-  static public boolean shulkerContainsItemStack(@Nullable ItemStack possibleShulker, @Nullable ItemStack is, int amount) {
+  static public boolean shulkerContainsItemStack(@Nullable ItemStack possibleShulker, @Nullable ItemStack is, int amount, boolean... checkBundles) {
     if(possibleShulker == null || is == null) return false;
+    boolean checkBundlesFlag = checkBundles.length > 0 && checkBundles[0];
     if(!(possibleShulker.getItemMeta() instanceof BlockStateMeta im)) return false;
     if(!(im.getBlockState() instanceof ShulkerBox shulker)) return false;
     // As bundles can be put in shulkers we need to check both the item and possible a bundle using bundleContainsItemStack()
     for(ItemStack nestedItem : shulker.getInventory().getContents()){
       if(nestedItem == null) continue;
       if(nestedItem.getType().equals(is.getType()) && nestedItem.getAmount() >= amount) return true;
-      if(nestedItem.getType() == Material.BUNDLE && bundleContainsItemStack(nestedItem, is, amount)) return true;
+      if(checkBundlesFlag && nestedItem.getType() == Material.BUNDLE && bundleContainsItemStack(nestedItem, is, amount)) return true;
     }
     return false;
   }
@@ -198,11 +203,26 @@ public class MechanicsUtil {
    */
   static public void swapItems(@Nullable PlayerInventory pi, int i1, int i2) {
     if(pi == null) return;
-    if(i1 >= pi.getSize() || i2 >= pi.getSize()) return;
-    ItemStack item1 = pi.getItem(i1);
-    ItemStack item2 = pi.getItem(i2);
-    pi.setItem(i1, item2);
-    pi.setItem(i2, item1);
+    // Check for armor and offhand slots for i1 and i2 and get/set using appropriate methods
+    // 40 = offhand, 36-39 = armor, 0-35 = main inventory
+    i1 = Math.min(i1, 40);
+    i2 = Math.min(i2, 40);
+    if(i1 == 40) {
+      ItemStack item1 = pi.getItemInOffHand();
+      ItemStack item2 = pi.getItem(i2);
+      pi.setItemInOffHand(item2);
+      pi.setItem(i2, item1);
+    } else if(i2 == 40) {
+      ItemStack item1 = pi.getItem(i1);
+      ItemStack item2 = pi.getItemInOffHand();
+      pi.setItem(i1, item2);
+      pi.setItemInOffHand(item1);
+    } else {
+      ItemStack item1 = pi.getItem(i1);
+      ItemStack item2 = pi.getItem(i2);
+      pi.setItem(i1, item2);
+      pi.setItem(i2, item1);
+    }
   }
   /**
    * This method swaps the items in a player inventory and a shulker box
@@ -226,5 +246,92 @@ public class MechanicsUtil {
     im.setBlockState(sb);
     item.setItemMeta(im);
     pi.setItem(shulkerBoxIndex, item);
+  }
+  /**
+   * This method swaps the items in two shulker boxes
+   * @param pi The player inventory to swap the items for
+   * @param i1 The slot in the player inventory that contains the first shulker box [0-35]
+   * @param si1 The slot in the first shulker box [0-26]
+   * @param i2 The slot in the player inventory that contains the second shulker box [0-35]
+   * @param si2 The slot in the second shulker box [0-26]
+   */
+  static public void swapItemsBetweenShulkers(@Nullable PlayerInventory pi, int i1, int si1, int i2, int si2) {
+    if(pi == null) return;
+    if(i1 >= pi.getSize() || i2 >= pi.getSize()) return;
+    ItemStack item1 = pi.getItem(i1);
+    ItemStack item2 = pi.getItem(i2);
+    if(item1 == null || item2 == null) return;
+    if(!(item1.getItemMeta() instanceof BlockStateMeta im1) || !(item2.getItemMeta() instanceof BlockStateMeta im2)) return;
+    if(!(im1.getBlockState() instanceof ShulkerBox sb1) || !(im2.getBlockState() instanceof ShulkerBox sb2)) return;
+    ItemStack nestedItem1 = sb1.getInventory().getItem(si1);
+    ItemStack nestedItem2 = sb2.getInventory().getItem(si2);
+    sb1.getInventory().setItem(si1, nestedItem2);
+    sb2.getInventory().setItem(si2, nestedItem1);
+    sb1.update();
+    sb2.update();
+    im1.setBlockState(sb1);
+    im2.setBlockState(sb2);
+    item1.setItemMeta(im1);
+    item2.setItemMeta(im2);
+    pi.setItem(i1, item1);
+    pi.setItem(i2, item2);
+  }
+
+  /**
+   * This method finds an {@link ItemStack} in a {@link PlayerInventory}.
+   * @param pi The player inventory to search
+   * @param i The item stack to find
+   * @return A {@link Triple} containing the slot index, whether the item was found in a shulker box,
+   *         and the slot index in the shulker box or null if the item was not found.<br>
+   *         The shulker box slot index will be null if the item was not found in a shulker box.
+   *         Or a triple with nulls if the item was not found.
+   */
+  @NotNull static public Triple<Integer, Boolean, Integer> find(@Nullable PlayerInventory pi, @Nullable ItemStack i) {
+    if(pi == null || i == null) return new Triple<>(null, null, null);
+    for(int j = 0; j < pi.getSize(); j++) {
+      ItemStack item = pi.getItem(j);
+      if(item == null) continue;
+      if(item.getType().equals(i.getType()) && item.getAmount() >= i.getAmount()) return new Triple<>(j, false, null);
+      if(item.getItemMeta() instanceof BlockStateMeta im) {
+        if(im.getBlockState() instanceof ShulkerBox sb) {
+          for(int k = 0; k < sb.getInventory().getSize(); k++) {
+            ItemStack nestedItem = sb.getInventory().getItem(k);
+            if(nestedItem == null) continue;
+            if(nestedItem.getType().equals(i.getType()) && nestedItem.getAmount() >= i.getAmount()) return new Triple<>(j, true, k);
+          }
+        }
+      }
+    }
+    return new Triple<>(null, null, null);
+  }
+  /**
+   * This method swaps the items using two {@link Triple} objects. Where the first value is the slot index,
+   * the second value is whether the item is in a shulker box, and the third value is the slot index in the shulker box.
+   * @see #find(PlayerInventory, ItemStack)
+   * @param pi The player inventory to swap the items for
+   * @param item1 The first item to swap
+   * @param item2 The second item to swap
+   */
+  static public void swapItems(
+    @Nullable PlayerInventory pi,
+    Triple<Integer, Boolean, Integer> item1,
+    Triple<Integer, Boolean, Integer> item2) {
+    if(pi == null || item1 == null || item2 == null) return;
+    Integer i11 = item1.fst(); // First Item, First Slot
+    Boolean inShulker1 = item1.snd(); // First Item, Second Slot
+    Integer i13 = item1.thd(); // First Item, Shulker Slot
+    Integer i21 = item2.fst(); // Second Item, First Slot
+    Boolean inShulker2 = item2.snd(); // Second Item, Second Slot
+    Integer i23 = item2.thd(); // Second Item, Shulker Slot
+    if(i11 == null || i21 == null || inShulker1 == null || inShulker2 == null) return;
+    if(!inShulker1 && !inShulker2) { // Both items are in the player inventory, NOT in a shulker box
+      swapItems(pi, i11, i21);
+    } else if(inShulker1 && inShulker2 && i13 != null && i23 != null) { // Both items are in a shulker box
+      swapItemsBetweenShulkers(pi, i11, i13, i21, i23);
+    } else if(inShulker1 && i13 != null) { // First item is in a shulker box and the second item is in the player inventory
+      swapItemsFromShulker(pi, i21, i11, i13);
+    } else if(i23 != null) { // First item is in the player inventory and the second item is in a shulker box
+      swapItemsFromShulker(pi, i11, i21, i23);
+    }
   }
 }

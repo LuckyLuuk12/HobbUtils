@@ -1,8 +1,10 @@
 package net.hobbnetwork.storage;
 
 import lombok.Getter;
+import lombok.Setter;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -13,12 +15,12 @@ import java.util.function.Supplier;
  * <b>ENSURE THAT THE VALUE TYPE IMPLEMENTS {@link Serializable}</b>
  * @param <T> The type of the value
  */
-@Getter
-public class TypedKeyValue<T extends Serializable> {
-  public static List<TypedKeyValue<?>> ALL;
-  private final Class<T> type;
-  private final Supplier<T> defaultValue;
-  private final String key;
+@Getter @Setter
+public class TypedKeyValue<T> {
+  public static List<TypedKeyValue<?>> ALL = new ArrayList<>();
+  private Class<T> type;
+  private Supplier<T> defaultValue;
+  private String key;
   /**
    * This constructor creates a new TypedKeyValue object
    * @param key The name of the key
@@ -31,7 +33,7 @@ public class TypedKeyValue<T extends Serializable> {
     this.defaultValue = defaultValue;
   }
 
-  public CompletableFuture<Boolean> initDefault(String key, H2Storage storage) {
+  public CompletableFuture<Boolean> initDefault(String key, Storage storage) {
     return this.exists(storage).thenCompose((has) -> {
       if(has) return CompletableFuture.completedFuture(false);
       return storage.setValue(this, defaultValue.get());
@@ -42,8 +44,7 @@ public class TypedKeyValue<T extends Serializable> {
    * @param storage The storage to check
    * @return Whether the key exists
    */
-  public CompletableFuture<Boolean> exists(H2Storage storage){
-
+  public CompletableFuture<Boolean> exists(Storage storage) {
     return storage.getValue(this).thenApply(Objects::nonNull);
   }
 

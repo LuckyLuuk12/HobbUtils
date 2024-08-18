@@ -1,5 +1,6 @@
 package net.hobbnetwork.storage;
 
+import net.hobbnetwork.custom.Storable;
 import net.hobbnetwork.managers.HookManager;
 import net.hobbnetwork.utils.LogUtil;
 import org.jetbrains.annotations.NotNull;
@@ -51,7 +52,10 @@ public class H2Storage extends Storage {
         : "MERGE INTO `key_value` (`key`, `value`) VALUES (?, ?);";
       try (PreparedStatement pstmt = connection.prepareStatement(insertSQL)) {
         pstmt.setString(1, tkv.getKey());
-        if(value != null) pstmt.setObject(2, BukkitSerializer.set(value), Types.JAVA_OBJECT);
+        if(value != null) {
+          Object v = value instanceof Storable<?> s ? s.toString() : value;
+          pstmt.setObject(2, v, Types.JAVA_OBJECT);
+        }
         return pstmt.executeUpdate() != 0;
       } catch (Exception e) {
         hookManager.log(Level.SEVERE, "[H2Storage] Could not set value!\t"+tkv.getKey()+"\n", e);
@@ -69,7 +73,11 @@ public class H2Storage extends Storage {
         ResultSet rs = pstmt.executeQuery();
         if(!rs.next()) return null;
         // try casting to Storable and use the readFrom method, catch using the dynamicGson:
-        return tkv.getType().cast(BukkitSerializer.get(rs.getObject("value", Object.class))); // Convert using casting
+        Object res = rs.getObject("value", Object.class);
+        // If the type implements Storable, try to read it from the string, otherwise cast it to the type
+        return (Storable.class.isAssignableFrom(tkv.getType()))
+          ? ((Storable<?>) tkv.getType().getConstructor().newInstance()).fromString(res.toString())
+          : tkv.getType().cast(res);
       } catch (Exception e) {
         hookManager.log(Level.SEVERE, "[H2Storage] Could not get value!\t"+tkv.getKey()+"\n", e);
         return null;
