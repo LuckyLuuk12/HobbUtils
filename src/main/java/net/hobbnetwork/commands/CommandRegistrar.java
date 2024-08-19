@@ -15,24 +15,35 @@ import java.lang.reflect.Field;
  * If the registration fails, it will fall back to the default Bukkit command registration.
  */
 public class CommandRegistrar {
-
   private final HookManager hookManager;
 
   public CommandRegistrar(HookManager hookManager) {
     this.hookManager = hookManager;
   }
-
-  public void registerCommand(String name, HobbCommand executor) throws RuntimeException {
+  /**
+   * This method registers a command to the server. <br>
+   * It first tries to register the command the normal way, if that fails it will fall back to using reflection.<br>
+   * This reflection is done by {@link CommandRegistrar#attemptRegistration(String, HobbCommand)}.
+   * @param name The name of the command
+   * @param executor The executor of the command
+   * @throws RuntimeException If the command could not be registered because the command was not in the plugin.yml
+   */
+  public void registerCommand(String name, HobbCommand executor) throws Exception {
     try {
-      attemptRegistration(name, executor);
-    } catch (Exception e) {
       PluginCommand command = Bukkit.getPluginCommand(name);
       if(command == null) throw new RuntimeException("Could not register command: " + name);
       command.setExecutor(executor);
       command.setTabCompleter(executor);
+    } catch (Exception e) {
+      attemptRegistration(name, executor);
     }
   }
-
+  /**
+   * This method attempts to register a command using reflection.
+   * @param name The name of the command
+   * @param executor The executor of the command
+   * @throws Exception If the registration fails
+   */
   private void attemptRegistration(String name, HobbCommand executor) throws Exception {
     // Get the CommandMap
     Field commandMapField = Bukkit.getServer().getClass().getDeclaredField("commandMap");

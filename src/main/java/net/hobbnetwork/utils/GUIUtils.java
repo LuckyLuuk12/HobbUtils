@@ -74,17 +74,26 @@ public class GUIUtils implements Listener {
    */
   public void setItem(int slot, ItemStack item, boolean isEditable, ClickCallback callback) {
     if (size != null && slot >= size) return;
-    inventory = inventory == null ? Bukkit.createInventory(null, type, title) : inventory;
+    if (inventory == null) {
+      if (type == InventoryType.CHEST && size != null) {
+        inventory = Bukkit.createInventory(null, (size/9)*9, title);
+      } else {
+        inventory = Bukkit.createInventory(null, type, title);
+      }
+    }
     inventory.setItem(slot, item);
     this.isEditable.set(slot, isEditable);
     this.callbacks.set(slot, callback);
     guiMap.put(inventory, this);
   }
   /**
-   * This method opens the GUI for the specified player.
+   * This method opens the GUI for the specified player.<br>
+   * In case a CHEST InventoryType is used, the size should be a multiple of 9.
+   * and this method will create a new Inventory object with the specified size.
    * @param player The player to open the GUI for
    */
   public void open(Player player) {
+    if (inventory == null) return;
     player.openInventory(this.inventory);
   }
   /**
@@ -105,9 +114,9 @@ public class GUIUtils implements Listener {
     if (!guiMap.containsKey(inventory)) return;
     GUIUtils gui = guiMap.get(inventory);
     int slot = event.getRawSlot();
-    if (slot >= gui.size) return;
-    ClickCallback callback = gui.getCallback(slot);
+    if (slot < 0 || slot >= gui.size) return;
     event.setCancelled(gui.isEditable.get(slot) == null || !gui.isEditable.get(slot));
+    ClickCallback callback = gui.getCallback(slot);
     if (callback == null) return;
     callback.onClick(event);
   }

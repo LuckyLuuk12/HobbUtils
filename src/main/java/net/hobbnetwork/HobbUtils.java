@@ -27,7 +27,11 @@ public final class HobbUtils extends JavaPlugin {
     console = thisPlugin.getLogger();
     hookManager = new HookManager(thisPlugin, "true", "00bc8a");
     hookManager.log(Level.INFO, "Enabled..");
-    new TestCommand().register(hookManager, true); // Just try out the deep feature (:
+    try {
+      new TestCommand().register(hookManager, true); // Just try out the deep feature (:
+    } catch(Exception e) {
+      console.log(Level.SEVERE, "Failed to register command: ", e);
+    }
   }
 
   @Override

@@ -168,7 +168,7 @@ public class HobbCommand implements TabExecutor {
    * @param hookManager The {@link HookManager} to use for registering the command.
    * @param deep Whether to register subcommands as well.
    */
-  public void register(HookManager hookManager, boolean... deep) throws RuntimeException {
+  public void register(HookManager hookManager, boolean... deep) throws Exception {
     boolean deep1 = deep.length > 0 && deep[0];
     if(!canRegister) return;
     CommandRegistrar registrar = new CommandRegistrar(hookManager);

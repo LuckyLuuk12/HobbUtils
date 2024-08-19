@@ -18,6 +18,7 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Objects;
 import java.util.logging.Level;
 
 public class TestCommand extends HobbCommand {
@@ -50,7 +51,7 @@ public class TestCommand extends HobbCommand {
     }
   }
 
-  private class Log extends HobbCommand {
+  private static class Log extends HobbCommand {
     public Log() {
       this.subLevel = 1;
       this.name = "log";
@@ -87,7 +88,7 @@ public class TestCommand extends HobbCommand {
     }
   }
 
-  private class GUI extends HobbCommand {
+  private static class GUI extends HobbCommand {
     public GUI() {
       this.subLevel = 1;
       this.name = "gui";
@@ -102,24 +103,26 @@ public class TestCommand extends HobbCommand {
         return;
       }
       // Open a GUI for the player
-      GUIUtils gui = new GUIUtils(HobbUtils.getHookManager(), InventoryType.CHEST, "Test GUI", 9);
+      GUIUtils gui = new GUIUtils(HobbUtils.getHookManager(), InventoryType.CHEST, "Test GUI", 36);
       ItemStack head = ItemUtil.getItemStack(Material.PLAYER_HEAD, "Who is it?", "Itsa me, "+p.getName()+"!");
       gui.setItem(3, head, false, (clickEvent) -> {
+        HobbUtils.getConsole().log(LogUtil.LogLevel.TEST, "Is editable: "+false);
         HobbUtils.getConsole().log(LogUtil.LogLevel.TEST, "Is cancelled: "+clickEvent.isCancelled());
-        clickEvent.setCancelled(true); // Try to remove this and check whether it is protected by isEditable
+//        clickEvent.setCancelled(true); // Try to remove this and check whether it is protected by isEditable
         HobbUtils.getConsole().log(LogUtil.LogLevel.TEST, "Manually cancelled: "+clickEvent.isCancelled());
       });
-      if(head.lore() != null) head.lore().add(TextUtil.parseMcString("You can take this one (:"));
+      if(head.lore() != null) Objects.requireNonNull(head.lore()).add(TextUtil.parseMcString("You can take this one (:"));
       gui.setItem(5, head, true, (clickEvent) -> {
+        HobbUtils.getConsole().log(LogUtil.LogLevel.TEST, "Is editable: "+true);
         HobbUtils.getConsole().log(LogUtil.LogLevel.TEST, "Is cancelled: "+clickEvent.isCancelled());
-        clickEvent.setCancelled(true); // Try to remove this and check whether it is protected by isEditable
+//        clickEvent.setCancelled(true); // Try to remove this and check whether it is protected by isEditable
         HobbUtils.getConsole().log(LogUtil.LogLevel.TEST, "Manually cancelled: "+clickEvent.isCancelled());
       });
       gui.open(p);
     }
   }
 
-  private class CheckSlotIndices extends HobbCommand {
+  private static class CheckSlotIndices extends HobbCommand {
     public CheckSlotIndices() {
       this.subLevel = 1;
       this.name = "check-slot-indices";
